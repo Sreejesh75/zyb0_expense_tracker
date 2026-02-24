@@ -8,6 +8,7 @@ class AppColors {
     0xFF4B42FF,
   ); // Matches the new blue from screenshot
   static const Color textPrimary = Colors.white;
+  static const Color linkBlue = Color(0xFF007AFF);
   static const Color textSecondary = Color(0xFFAAAAAA);
 
   // Grey shades

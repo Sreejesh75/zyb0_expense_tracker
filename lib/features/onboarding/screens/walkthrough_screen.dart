@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
 import 'package:zybo_expense_tracker/core/theme/app_text_styles.dart';
 import '../models/walkthrough_data.dart';
+import 'package:zybo_expense_tracker/features/auth/screens/login_screen.dart';
 
 class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({super.key});
@@ -23,13 +24,12 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
     WalkthroughData(
       title: 'Insights That Help You Spend Better Without Complexity',
       description: 'See category-wise spending, recent activity.',
-      imagePath:
-          'assets/images/splash_1.png', 
+      imagePath: 'assets/images/splash_1.png',
     ),
     WalkthroughData(
       title: 'Local-First Tracking That Stays Fully On Your Device',
       description: 'Your finances stay on your phone.',
-      imagePath: 'assets/images/splash_1.png', 
+      imagePath: 'assets/images/splash_1.png',
     ),
   ];
 
@@ -46,8 +46,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // Navigate to Home or Login
-      // For now we don't have those, so we can just print or do nothing
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     }
   }
 
@@ -66,7 +67,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-         
           Positioned.fill(
             child: PageView.builder(
               controller: _pageController,
@@ -89,9 +89,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(
-                  alpha: 0.35,
-                ), 
+                color: Colors.black.withValues(alpha: 0.35),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -106,11 +104,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             ),
           ),
 
-          
           SafeArea(
             child: Column(
               children: [
-               
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24.0,
@@ -122,7 +118,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                       if (_currentIndex < 2)
                         TextButton(
                           onPressed: () {
-                           
                             _pageController.animateToPage(
                               2,
                               duration: const Duration(milliseconds: 300),
@@ -144,22 +139,18 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                           ),
                         )
                       else
-                        const SizedBox(
-                          height: 48,
-                        ), 
+                        const SizedBox(height: 48),
                     ],
                   ),
                 ),
 
                 const Spacer(),
 
-               
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                    
                       Row(
                         children: List.generate(
                           _pages.length,
@@ -175,7 +166,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                                     ? AppColors.textPrimary
                                     : AppColors.textPrimary.withValues(
                                         alpha: 0.3,
-                                      ), 
+                                      ),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -198,7 +189,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                   ),
                 ),
 
-            
                 Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Row(
@@ -227,10 +217,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                         const SizedBox(width: 16),
                       ],
 
-                      
                       Expanded(
                         child: SizedBox(
-                          height: 56, 
+                          height: 56,
                           child: ElevatedButton(
                             onPressed: _nextPage,
                             style: ElevatedButton.styleFrom(
@@ -238,9 +227,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                               foregroundColor: AppColors.textPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  16,
-                                ), 
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               elevation: 0,
                             ),

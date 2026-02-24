@@ -13,6 +13,14 @@ class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
+  static TextStyle loginTitle = GoogleFonts.inter(
+    fontSize: 24,
+    fontWeight: FontWeight.w600, // SemiBold
+    height: 1.5, // 150%
+    letterSpacing: -0.05 * 24, // -5%
+    color: AppColors.textPrimary,
+  );
+
   static TextStyle description = GoogleFonts.inter(
     fontSize: 15,
     fontWeight: FontWeight.w400, // Regular
@@ -27,5 +35,13 @@ class AppTextStyles {
     height: 1.0, // 100%
     letterSpacing: -0.03 * 16, // -3%
     color: AppColors.textPrimary,
+  );
+
+  static TextStyle linkText = GoogleFonts.inter(
+    fontSize: 15,
+    fontWeight: FontWeight.w500, // Medium
+    height: 24 / 15, // 1.6
+    letterSpacing: -0.04 * 15, // -4%
+    color: AppColors.linkBlue,
   );
 }
