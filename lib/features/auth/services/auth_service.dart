@@ -1,0 +1,96 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zybo_expense_tracker/core/constants/api_constants.dart';
+
+class AuthService {
+  final Dio _dio;
+
+  AuthService()
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.baseUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+  /// Send OTP to the given phone number
+  Future<Map<String, dynamic>> sendOtp(String phone) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.sendOtp,
+        data: {'phone': phone},
+      );
+
+      if (response.data is String) {
+        return jsonDecode(response.data);
+      }
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    } catch (e) {
+      throw Exception('Failed to send OTP: $e');
+    }
+  }
+
+  /// Create a new account with the given nickname
+  Future<Map<String, dynamic>> createAccount(
+    String phone,
+    String nickname,
+  ) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.createAccount,
+        data: {'phone': phone, 'nickname': nickname},
+      );
+
+      if (response.data is String) {
+        return jsonDecode(response.data);
+      }
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    } catch (e) {
+      throw Exception('Failed to create account: $e');
+    }
+  }
+
+  /// Save Token and Nickname locally
+  Future<void> saveAuthData(String token, String nickname) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    await prefs.setString('user_nickname', nickname);
+  }
+
+  /// Read Token from SharedPreferences
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  /// Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  /// Clear session
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_nickname');
+  }
+
+  String _handleDioError(DioException e) {
+    if (e.response != null) {
+      if (e.response?.data is Map) {
+        return e.response?.data['message'] ?? 'Server error occurred';
+      }
+      return e.response?.statusMessage ?? 'Server error occurred';
+    } else {
+      return 'Network error or timeout';
+    }
+  }
+}

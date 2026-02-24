@@ -9,11 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:zybo_expense_tracker/main.dart';
+import 'package:zybo_expense_tracker/features/auth/services/auth_service.dart'
+    as zybo_auth;
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    final authService = zybo_auth.AuthService();
+    await tester.pumpWidget(MyApp(authService: authService));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
