@@ -33,7 +33,7 @@ class TransactionService {
 
   Future<List<TransactionModel>> getTransactions() async {
     try {
-      final response = await _dio.get('/transactions/');
+      final response = await _dio.get(ApiConstants.getTransactions);
 
       final data = response.data is String
           ? jsonDecode(response.data)
@@ -59,7 +59,10 @@ class TransactionService {
         'transactions': transactions.map((t) => t.toApiJson()).toList(),
       };
 
-      final response = await _dio.post('/transactions/add/', data: requestData);
+      final response = await _dio.post(
+        ApiConstants.addTransactions,
+        data: requestData,
+      );
 
       final data = response.data is String
           ? jsonDecode(response.data)
@@ -80,7 +83,7 @@ class TransactionService {
 
     try {
       final response = await _dio.delete(
-        '/transactions/delete/',
+        ApiConstants.deleteTransactions,
         data: {'ids': ids},
       );
 

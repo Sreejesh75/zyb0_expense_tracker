@@ -205,19 +205,50 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
               color: const Color(0xFF262626), // Text field bg
               borderRadius: BorderRadius.circular(8),
             ),
-            alignment: Alignment.centerLeft,
-            child: TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Amount ( ₹ )",
-                hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                if (_amountController.text.isEmpty)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Amount ",
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 18,
+                          height: 1.0,
+                          letterSpacing: -0.03 * 18,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const Text(
+                        "( ₹ )",
+                        style: TextStyle(
+                          fontFamily: 'Helvetica Neue',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          height: 1.0,
+                          letterSpacing: -0.05 * 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                TextField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                  onChanged: (_) => setState(
+                    () {},
+                  ), // Need SetState to rebuild stack empty state
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-                border: InputBorder.none,
-                isDense: true,
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 16),

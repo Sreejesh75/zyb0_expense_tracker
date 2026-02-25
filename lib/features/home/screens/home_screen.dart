@@ -6,6 +6,8 @@ import 'package:zybo_expense_tracker/features/home/widgets/custom_nav_bar.dart';
 import 'package:zybo_expense_tracker/features/home/widgets/monthly_limit_card.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:zybo_expense_tracker/features/profile/screens/profile_screen.dart';
 import 'package:zybo_expense_tracker/features/home/widgets/add_transaction_bottom_sheet.dart';
 import 'package:zybo_expense_tracker/features/transactions/screens/transactions_screen.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
@@ -23,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _nickname = "User";
   int _selectedIndex = 0;
+  double _alertLimit = 10000;
 
   @override
   void initState() {
@@ -34,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _nickname = prefs.getString('user_nickname') ?? "User";
+      _alertLimit = prefs.getDouble('alert_limit') ?? 10000;
     });
   }
 
@@ -41,6 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+    if (index == 0) {
+      _loadUserProfile(); // Refresh data like limits when coming back
+    }
   }
 
   @override
@@ -55,12 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildHomeContent(),
                 const TransactionsScreen(),
-                const Center(
-                  child: Text(
-                    "Profile (Placeholder)",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
+                const ProfileScreen(),
               ],
             ),
 
@@ -138,30 +140,59 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 22),
-            const Row(
-              children: [
-                Expanded(
-                  child: BalanceCard(
-                    title: "Total Income",
-                    amount: "₹90,000",
-                    isIncome: true,
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: BalanceCard(
-                    title: "Total Expense",
-                    amount: "₹36,345",
-                    isIncome: false,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const MonthlyLimitCard(
-              title: "Monthly Limit",
-              currentAmount: 7324,
-              limitAmount: 10000,
+            BlocBuilder<TransactionBloc, TransactionState>(
+              builder: (context, state) {
+                double totalIncome = 0;
+                double totalExpense = 0;
+
+                if (state is TransactionLoaded) {
+                  for (var tx in state.transactions) {
+                    if (tx.type == 'credit') {
+                      totalIncome += tx.amount;
+                    } else if (tx.type == 'debit') {
+                      totalExpense += tx.amount;
+                    }
+                  }
+
+                  // Calculate net balance for the "Total Income" card as requested
+                  totalIncome = totalIncome - totalExpense;
+                }
+
+                final formatter = NumberFormat("#,##0");
+                final formattedIncome = "₹${formatter.format(totalIncome)}";
+                final formattedExpense = "₹${formatter.format(totalExpense)}";
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: BalanceCard(
+                            title:
+                                "Total Balance", // Updated title to better reflect its meaning
+                            amount: formattedIncome,
+                            isIncome: true,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: BalanceCard(
+                            title: "Total Expense",
+                            amount: formattedExpense,
+                            isIncome: false,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    MonthlyLimitCard(
+                      title: "Monthly Limit",
+                      currentAmount: totalExpense,
+                      limitAmount: _alertLimit,
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 24),
             // Recent Transactions List with dynamic header
