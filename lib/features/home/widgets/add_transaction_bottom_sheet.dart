@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:uuid/uuid.dart';
 import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
+import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
+import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
+import 'package:zybo_expense_tracker/features/transactions/models/transaction_model.dart';
 
 class AddTransactionBottomSheet extends StatefulWidget {
   const AddTransactionBottomSheet({super.key});
@@ -15,6 +20,49 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
   String selectedCategory = "Bills";
 
   final List<String> categories = ["Food", "Bills", "Transport", "Shopping"];
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _saveTransaction() {
+    final title = _titleController.text.trim();
+    final amountText = _amountController.text.trim();
+
+    if (title.isEmpty || amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter title and amount')),
+      );
+      return;
+    }
+
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
+
+    final transaction = TransactionModel(
+      id: const Uuid().v4(),
+      note: title,
+      amount: amount,
+      type: isExpense
+          ? 'debit'
+          : 'credit', // Usually expense=debit, income=credit
+      category: selectedCategory,
+      timestamp: DateTime.now(),
+    );
+
+    context.read<TransactionBloc>().add(AddTransactionEvent(transaction));
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +70,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
       width: 375,
       height: 578,
       padding: const EdgeInsets.only(top: 32, right: 16, left: 16, bottom: 20),
+      // ... all UI elements ... same as before
       decoration: const BoxDecoration(
         color: Color(0xFF1F1F1F),
         borderRadius: BorderRadius.only(
@@ -134,6 +183,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
             ),
             alignment: Alignment.centerLeft,
             child: TextField(
+              controller: _titleController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: "Title",
@@ -157,6 +207,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
             ),
             alignment: Alignment.centerLeft,
             child: TextField(
+              controller: _amountController,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
@@ -268,10 +319,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: () {
-                // To be integrated with SQLite later
-                Navigator.pop(context);
-              },
+              onPressed: _saveTransaction,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(

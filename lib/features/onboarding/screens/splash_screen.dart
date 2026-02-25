@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
+import 'package:zybo_expense_tracker/features/auth/bloc/auth_bloc.dart';
+import 'package:zybo_expense_tracker/features/home/screens/home_screen.dart';
 import 'walkthrough_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,11 +17,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Navigate to walkthrough after 3 seconds
+    _checkLoginState();
+  }
+
+  Future<void> _checkLoginState() async {
+    final isLoggedIn = await context.read<AuthBloc>().authService.isLoggedIn();
+
+    if (!mounted) return;
+
+    // Navigate after 3 seconds
     Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const WalkthroughScreen()),
-      );
+      if (isLoggedIn) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const WalkthroughScreen()),
+        );
+      }
     });
   }
 

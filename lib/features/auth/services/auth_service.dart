@@ -58,6 +58,21 @@ class AuthService {
     }
   }
 
+  /// Get local user profile
+  Future<Map<String, dynamic>?> getLocalUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final nickname = prefs.getString('user_nickname');
+
+    if (token != null && nickname != null && token.isNotEmpty) {
+      return {'nickname': nickname, 'token': token};
+    }
+
+    // Fallback to SQLite
+    final dbProfile = await DatabaseHelper.instance.getUserProfile();
+    return dbProfile;
+  }
+
   /// Save Token and Nickname locally
   Future<void> saveAuthData(String token, String nickname) async {
     final prefs = await SharedPreferences.getInstance();

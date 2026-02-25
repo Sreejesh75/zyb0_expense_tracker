@@ -21,12 +21,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (response['status'] == 'success') {
         final String receivedOtp = response['otp'].toString();
         debugPrint('--- OTP RECEIVED FROM API: $receivedOtp ---');
+        final bool userExists =
+            response['user_exists'] == true ||
+            response['user_exists'] == 'true';
 
         emit(
           OtpSentState(
             phone: event.phone,
             expectedOtp: receivedOtp, // API returns OTP for testing
-            userExists: response['user_exists'] ?? false,
+            userExists: userExists,
             token: response['token'],
             nickname: response['nickname'],
           ),
@@ -47,16 +50,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (currentState is OtpSentState) {
       if (currentState.expectedOtp == event.otpToVerify) {
         // OTP matches
-        if (currentState.userExists && currentState.token != null) {
-          // Returning user: Save info locally and succeed
+        if (currentState.userExists) {
+          // Returning user (from API): Save info locally and succeed
+          final tokenToSave = currentState.token ?? 'dummy_token';
           await authService.saveAuthData(
-            currentState.token!,
+            tokenToSave,
             currentState.nickname ?? 'User',
           );
-          emit(AuthSuccess(currentState.token!));
+          emit(AuthSuccess(tokenToSave));
         } else {
-          // New user: Requires nickname and create account
-          emit(OtpVerifiedNeedsAccount(event.phone));
+          // Check if local token/nickname exists (SQLite/SharedPrefs) before asking for nickname
+          final localProfile = await authService.getLocalUserProfile();
+          if (localProfile != null) {
+            final tokenToSave = localProfile['token'].toString();
+            final nicknameToSave = localProfile['nickname'].toString();
+            await authService.saveAuthData(
+              tokenToSave,
+              nicknameToSave,
+            ); // Ensure pref is synced if SQLite was used
+            emit(AuthSuccess(tokenToSave));
+          } else {
+            // New user: Requires nickname and create account
+            emit(OtpVerifiedNeedsAccount(event.phone));
+          }
         }
       } else {
         emit(const AuthError("Invalid OTP entered"));
