@@ -18,6 +18,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = "User";
   double _currentLimit = 10000;
+  bool _isSyncEnabled = false;
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
 
@@ -39,6 +40,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nickname = prefs.getString('user_nickname') ?? "User";
       _currentLimit = prefs.getDouble('alert_limit') ?? 10000;
+      _isSyncEnabled = prefs.getBool('is_sync_enabled') ?? false;
+    });
+  }
+
+  Future<void> _toggleSync(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_sync_enabled', value);
+    setState(() {
+      _isSyncEnabled = value;
     });
   }
 
@@ -118,7 +128,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 15),
 
             // CLOUD SYNC SECTION
-            _pad(const CloudSyncSection()),
+            _pad(
+              CloudSyncSection(
+                isEnabled: _isSyncEnabled,
+                onToggle: _toggleSync,
+              ),
+            ),
             const SizedBox(height: 24),
 
             // LOG OUT BUTTON

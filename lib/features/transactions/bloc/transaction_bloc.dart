@@ -13,6 +13,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<LoadTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
+    on<SyncTransactionsEvent>(_onSyncTransactions);
   }
 
   Future<void> _onLoadTransactions(
@@ -25,29 +26,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final localData = await localDb.getAllTransactions();
       emit(TransactionLoaded(localData));
 
-      // 2. Queue background sync for unsynced inserts/deletes (simplified logic)
-      final unsynced = await localDb.getUnsyncedTransactions();
-      if (unsynced.isNotEmpty) {
-        try {
-          final syncedIds = await apiService.syncTransactions(unsynced);
-          if (syncedIds.isNotEmpty) {
-            await localDb.markAsSynced(syncedIds);
-          }
-        } catch (_) {
-          // Silent fail for background sync, will retry later
-        }
-      }
-
-      // 3. (Optional but good practice) Fetch latest from server & update local
+      // 2. Fetch latest from server & update local
       try {
         final serverData = await apiService.getTransactions();
         if (serverData.isNotEmpty) {
-          // Basic logic: Overwrite/Insert into local DB
           for (var tx in serverData) {
             await localDb.insertTransaction(tx);
-            await localDb.markAsSynced([
-              tx.id,
-            ]); // It's from server, so it's synced
+            await localDb.markAsSynced([tx.id]);
           }
           final newLocalData = await localDb.getAllTransactions();
           emit(TransactionLoaded(newLocalData));
@@ -66,21 +51,22 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       // Optimistically update DB and UI
-      await localDb.insertTransaction(event.transaction);
+      final transaction = event.transaction.copyWith(
+        is_synced: 0,
+        is_deleted: 0,
+      );
+      await localDb.insertTransaction(transaction);
 
       if (state is TransactionLoaded) {
         final currentTransactions = (state as TransactionLoaded).transactions;
-        // Prepend because it's newest
-        emit(TransactionLoaded([event.transaction, ...currentTransactions]));
+        emit(TransactionLoaded([transaction, ...currentTransactions]));
       } else {
-        emit(TransactionLoaded([event.transaction]));
+        emit(TransactionLoaded([transaction]));
       }
 
       // Try syncing immediately
       try {
-        final syncedIds = await apiService.syncTransactions([
-          event.transaction,
-        ]);
+        final syncedIds = await apiService.syncTransactions([transaction]);
         if (syncedIds.isNotEmpty) {
           await localDb.markAsSynced(syncedIds);
         }
@@ -98,7 +84,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     try {
-      // Optimistic delete
+      // Optimistic delete: Mark as deleted in local DB
       await localDb.deleteTransaction(event.id);
 
       if (state is TransactionLoaded) {
@@ -110,16 +96,57 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         );
       }
 
-      // Attempt to delete on API
+      // Try background sync for deletion
       try {
-        await apiService.deleteTransactions([event.id]);
+        final confirmedIds = await apiService.deleteTransactions([event.id]);
+        if (confirmedIds.isNotEmpty) {
+          await localDb.hardDeleteTransactions(confirmedIds);
+        }
       } catch (_) {
-        // If it fails, realistically we should have an 'unsynced_deletes' cache
-        // but skipping that extreme edge case for the primary UX request
+        // Fail silently, will be handled by main sync workflow
       }
     } catch (e) {
       emit(TransactionError("Failed to delete transaction"));
       add(LoadTransactionsEvent()); // Revert
+    }
+  }
+
+  Future<void> _onSyncTransactions(
+    SyncTransactionsEvent event,
+    Emitter<TransactionState> emit,
+  ) async {
+    if (state is TransactionLoaded) {
+      final currentState = (state as TransactionLoaded).transactions;
+      // We could add a TransactionSyncing state if needed, but keeping it simple
+
+      try {
+        // 1. STEP A: Clean up Deletions (Cloud Purge)
+        final deletedIds = await localDb.getDeletedTransactionIds();
+        if (deletedIds.isNotEmpty) {
+          final confirmedDeletedIds = await apiService.deleteTransactions(
+            deletedIds,
+          );
+          if (confirmedDeletedIds.isNotEmpty) {
+            await localDb.hardDeleteTransactions(confirmedDeletedIds);
+          }
+        }
+
+        // 2. STEP B: Upload New Data (Cloud Backup)
+        final unsynced = await localDb.getUnsyncedActiveTransactions();
+        if (unsynced.isNotEmpty) {
+          final syncedIds = await apiService.syncTransactions(unsynced);
+          if (syncedIds.isNotEmpty) {
+            await localDb.markAsSynced(syncedIds);
+          }
+        }
+
+        // Return to cleanly loaded state
+        final refreshedData = await localDb.getAllTransactions();
+        emit(TransactionLoaded(refreshedData));
+      } catch (_) {
+        // Fallback to current state on error
+        emit(TransactionLoaded(currentState));
+      }
     }
   }
 }

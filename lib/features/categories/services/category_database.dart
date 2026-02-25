@@ -35,13 +35,16 @@ class CategoryDatabase {
     );
   }
 
-  Future<void> markAsSynced(String id) async {
+  Future<void> markAsSynced(List<String> ids) async {
     final db = await DatabaseHelper.instance.database;
+    if (ids.isEmpty) return;
+
+    final placeholders = List.filled(ids.length, '?').join(',');
     await db.update(
       tableName,
       {'is_synced': 1},
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'id IN ($placeholders)',
+      whereArgs: ids,
     );
   }
 
@@ -57,17 +60,40 @@ class CategoryDatabase {
     });
   }
 
-  Future<List<CategoryModel>> getUnsyncedCategories() async {
+  Future<List<String>> getDeletedCategoryIds() async {
+    final db = await DatabaseHelper.instance.database;
+    final List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      columns: ['id'],
+      where: 'is_deleted = 1',
+    );
+    return result.map((row) => row['id'] as String).toList();
+  }
+
+  Future<void> hardDeleteCategories(List<String> ids) async {
+    final db = await DatabaseHelper.instance.database;
+    if (ids.isEmpty) return;
+
+    final placeholders = List.filled(ids.length, '?').join(',');
+    await db.delete(tableName, where: 'id IN ($placeholders)', whereArgs: ids);
+  }
+
+  Future<List<CategoryModel>> getUnsyncedActiveCategories() async {
     final db = await DatabaseHelper.instance.database;
     final List<Map<String, dynamic>> maps = await db.query(
       tableName,
-      where: 'is_synced = ?',
-      whereArgs: [0],
+      where: 'is_synced = 0 AND is_deleted = 0',
     );
 
-    return List.generate(maps.length, (i) {
-      return CategoryModel.fromDbMap(maps[i]);
-    });
+    return maps.map((map) => CategoryModel.fromDbMap(map)).toList();
+  }
+
+  Future<bool> isTableEmpty() async {
+    final db = await DatabaseHelper.instance.database;
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM $tableName'),
+    );
+    return (count ?? 0) == 0;
   }
 
   Future<void> clearAll() async {

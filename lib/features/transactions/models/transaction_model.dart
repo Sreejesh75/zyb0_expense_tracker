@@ -67,6 +67,30 @@ class TransactionModel extends Equatable {
     };
   }
 
+  TransactionModel copyWith({
+    String? id,
+    String? note,
+    double? amount,
+    String? type,
+    String? category_id,
+    String? categoryName,
+    DateTime? timestamp,
+    int? is_synced,
+    int? is_deleted,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      note: note ?? this.note,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      category_id: category_id ?? this.category_id,
+      categoryName: categoryName ?? this.categoryName,
+      timestamp: timestamp ?? this.timestamp,
+      is_synced: is_synced ?? this.is_synced,
+      is_deleted: is_deleted ?? this.is_deleted,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

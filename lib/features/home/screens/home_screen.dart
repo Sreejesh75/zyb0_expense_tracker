@@ -146,8 +146,10 @@ class _HomeScreenState extends State<HomeScreen> {
               builder: (context, state) {
                 double totalIncome = 0;
                 double totalExpense = 0;
+                bool hasTransactions = false;
 
                 if (state is TransactionLoaded) {
+                  hasTransactions = state.transactions.isNotEmpty;
                   for (var tx in state.transactions) {
                     if (tx.type == 'credit') {
                       totalIncome += tx.amount;
@@ -192,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       currentAmount:
                           totalIncome, // This represents the total balance
                       limitAmount: _alertLimit,
+                      hasTransactions: hasTransactions,
                     ),
                   ],
                 );

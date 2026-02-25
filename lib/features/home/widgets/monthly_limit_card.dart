@@ -8,29 +8,38 @@ class MonthlyLimitCard extends StatelessWidget {
   final double currentAmount;
   final double limitAmount;
   final String title;
+  final bool hasTransactions;
 
   const MonthlyLimitCard({
     super.key,
     required this.currentAmount,
     required this.limitAmount,
     required this.title,
+    this.hasTransactions = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool isExceeded = currentAmount <= limitAmount;
+    bool isExceeded = false;
     double progress = 0;
 
-    if (currentAmount > 0) {
-      progress = limitAmount / currentAmount;
-    } else {
-      progress = 1.0;
+    if (hasTransactions) {
+      isExceeded = currentAmount <= limitAmount;
+      if (currentAmount > 0) {
+        progress = limitAmount / currentAmount;
+      } else {
+        progress = 1.0;
+      }
     }
 
     if (progress > 1.0) progress = 1.0;
     if (progress < 0.0) progress = 0.0;
 
-    int remainingPercent = isExceeded ? 0 : ((1.0 - progress) * 100).round();
+    int remainingPercent = 100;
+    if (hasTransactions) {
+      remainingPercent = isExceeded ? 0 : ((1.0 - progress) * 100).round();
+    }
+
     final formatter = NumberFormat("#,##0");
     final displayedCurrent = currentAmount;
 
@@ -73,9 +82,7 @@ class MonthlyLimitCard extends StatelessWidget {
                       fontSize: 16,
                       letterSpacing: -0.05 * 16,
                       height: 1.5,
-                      color: isExceeded
-                          ? const Color(0xFFFF3437)
-                          : Colors.white,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -91,15 +98,12 @@ class MonthlyLimitCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Icon(
-                isExceeded
-                    ? PhosphorIcons.warningCircle(PhosphorIconsStyle.fill)
-                    : PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
-                color: isExceeded
-                    ? const Color(0xFFFF3437)
-                    : const Color(0xFF1DC533),
-                size: 20,
-              ),
+              if (hasTransactions && isExceeded)
+                Icon(
+                  PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
+                  color: const Color(0xFF1DC533),
+                  size: 20,
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -108,7 +112,9 @@ class MonthlyLimitCard extends StatelessWidget {
             height: 6,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: isExceeded
+              color: !hasTransactions
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : isExceeded
                   ? const Color(0xFF900B0D)
                   : Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(3),
@@ -120,7 +126,9 @@ class MonthlyLimitCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(3),
                   gradient: LinearGradient(
-                    colors: isExceeded
+                    colors: !hasTransactions
+                        ? [Colors.white24, Colors.white10]
+                        : isExceeded
                         ? const [Color(0xFFFF3437), Color(0xFF900B0D)]
                         : const [Color(0xFF1DC533), Color(0xFF0E5F19)],
                   ),
@@ -130,7 +138,11 @@ class MonthlyLimitCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isExceeded ? "Limit Exceeded" : "$remainingPercent% Remaining",
+            !hasTransactions
+                ? "No transactions yet"
+                : isExceeded
+                ? "Limit Exceeded"
+                : "$remainingPercent% Remaining",
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w400,
               fontSize: 13,

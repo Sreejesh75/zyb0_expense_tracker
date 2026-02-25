@@ -25,3 +25,5 @@ class DeleteTransactionEvent extends TransactionEvent {
   @override
   List<Object> get props => [id];
 }
+
+class SyncTransactionsEvent extends TransactionEvent {}

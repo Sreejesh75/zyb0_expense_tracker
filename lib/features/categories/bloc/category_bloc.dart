@@ -28,7 +28,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       // 1. Instantly load local data
       List<CategoryModel> localData = await localDb.getAllCategories();
 
-      if (localData.isEmpty) {
+      bool isEmpty = await localDb.isTableEmpty();
+      if (isEmpty) {
         final defaults = ['Food', 'Bills', 'Transport', 'Shopping'];
         for (var name in defaults) {
           final cat = CategoryModel(id: _uuid.v4(), name: name, is_synced: 0);
@@ -45,7 +46,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         if (serverData.isNotEmpty) {
           for (var cat in serverData) {
             await localDb.insertCategory(cat);
-            await localDb.markAsSynced(cat.id);
+            await localDb.markAsSynced([cat.id]);
           }
           final newLocalData = await localDb.getAllCategories();
           emit(CategoryLoaded(newLocalData));
@@ -63,7 +64,11 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     Emitter<CategoryState> emit,
   ) async {
     try {
-      final newCategory = CategoryModel(id: _uuid.v4(), name: event.name);
+      final newCategory = CategoryModel(
+        id: _uuid.v4(),
+        name: event.name,
+        is_synced: 0,
+      );
 
       // Optimistic update
       await localDb.insertCategory(newCategory);
@@ -75,13 +80,11 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         emit(CategoryLoaded([newCategory]));
       }
 
-      // Sync immediately
+      // Sync immediately if possible
       try {
         final syncedIds = await apiService.syncCategories([newCategory]);
         if (syncedIds.isNotEmpty) {
-          for (var id in syncedIds) {
-            await localDb.markAsSynced(id);
-          }
+          await localDb.markAsSynced(syncedIds);
         }
       } catch (_) {
         // Leave unsynced locally
@@ -97,7 +100,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     Emitter<CategoryState> emit,
   ) async {
     try {
-      // Optimistic delete
+      // Optimistic delete: Mark as deleted in local DB
       await localDb.deleteCategory(event.id);
 
       if (state is CategoryLoaded) {
@@ -109,11 +112,14 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
         );
       }
 
-      // Delete on API
+      // Try background sync for deletion
       try {
-        await apiService.deleteCategories([event.id]);
+        final deletedIds = await apiService.deleteCategories([event.id]);
+        if (deletedIds.isNotEmpty) {
+          await localDb.hardDeleteCategories(deletedIds);
+        }
       } catch (_) {
-        // Ignore remote fail for optimistic local approach
+        // Leave is_deleted=1 locally for next sync attempt
       }
     } catch (e) {
       emit(CategoryError("Failed to delete category"));
@@ -130,12 +136,23 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       emit(CategorySyncing(currentState));
 
       try {
-        // Find unsynced
-        final unsynced = await localDb.getUnsyncedCategories();
+        // 1. STEP A: Clean up Deletions (Cloud Purge)
+        final deletedIds = await localDb.getDeletedCategoryIds();
+        if (deletedIds.isNotEmpty) {
+          final confirmedDeletedIds = await apiService.deleteCategories(
+            deletedIds,
+          );
+          if (confirmedDeletedIds.isNotEmpty) {
+            await localDb.hardDeleteCategories(confirmedDeletedIds);
+          }
+        }
+
+        // 2. STEP B: Upload New Data (Cloud Backup)
+        final unsynced = await localDb.getUnsyncedActiveCategories();
         if (unsynced.isNotEmpty) {
           final syncedIds = await apiService.syncCategories(unsynced);
-          for (var id in syncedIds) {
-            await localDb.markAsSynced(id);
+          if (syncedIds.isNotEmpty) {
+            await localDb.markAsSynced(syncedIds);
           }
         }
 
