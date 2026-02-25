@@ -87,18 +87,20 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           ),
 
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.35),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.8),
-                    Colors.black,
-                  ],
-                  stops: const [0.5, 0.75, 1.0],
+            child: IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black,
+                    ],
+                    stops: const [0.5, 0.75, 1.0],
+                  ),
                 ),
               ),
             ),
@@ -146,46 +148,48 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
 
                 const Spacer(),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: List.generate(
-                          _pages.length,
-                          (i) => Expanded(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: EdgeInsets.only(
-                                right: i == _pages.length - 1 ? 0 : 8,
-                              ),
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: _currentIndex == i
-                                    ? AppColors.textPrimary
-                                    : AppColors.textPrimary.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                borderRadius: BorderRadius.circular(2),
+                IgnorePointer(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: List.generate(
+                            _pages.length,
+                            (i) => Expanded(
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: EdgeInsets.only(
+                                  right: i == _pages.length - 1 ? 0 : 8,
+                                ),
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: _currentIndex == i
+                                      ? AppColors.textPrimary
+                                      : AppColors.textPrimary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      Text(
-                        _pages[_currentIndex].title,
-                        style: AppTextStyles.title,
-                      ),
-                      const SizedBox(height: 12),
+                        Text(
+                          _pages[_currentIndex].title,
+                          style: AppTextStyles.title,
+                        ),
+                        const SizedBox(height: 12),
 
-                      Text(
-                        _pages[_currentIndex].description,
-                        style: AppTextStyles.description,
-                      ),
-                    ],
+                        Text(
+                          _pages[_currentIndex].description,
+                          style: AppTextStyles.description,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

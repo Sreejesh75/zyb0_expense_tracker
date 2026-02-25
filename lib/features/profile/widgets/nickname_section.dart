@@ -1,12 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
 import 'package:zybo_expense_tracker/features/profile/widgets/profile_section_label.dart';
 
 class NicknameSection extends StatelessWidget {
   final String nickname;
+  final ValueChanged<String> onNicknameChanged;
 
-  const NicknameSection({super.key, required this.nickname});
+  const NicknameSection({
+    super.key,
+    required this.nickname,
+    required this.onNicknameChanged,
+  });
+
+  void _showEditDialog(BuildContext context) {
+    final TextEditingController controller = TextEditingController(
+      text: nickname,
+    );
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          title: const Text(
+            'Edit Nickname',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Enter new nickname',
+              hintStyle: const TextStyle(color: Colors.white54),
+              enabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white24),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  onNicknameChanged(controller.text.trim());
+                  Navigator.pop(context);
+                }
+              },
+              child: Text('Save', style: TextStyle(color: AppColors.primary)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,28 +89,31 @@ class NicknameSection extends StatelessWidget {
               Text(
                 nickname,
                 style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 20,
                   height: 1.5,
                   letterSpacing: -0.05 * 14,
                   color: Colors.white,
                 ),
               ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.5),
+              GestureDetector(
+                onTap: () => _showEditDialog(context),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Icon(
-                    PhosphorIcons.pencilSimple(),
-                    color: Colors.white,
-                    size: 18,
+                  child: Center(
+                    child: Icon(
+                      PhosphorIcons.pencilSimple(),
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
               ),

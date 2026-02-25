@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
 import 'package:zybo_expense_tracker/core/theme/app_text_styles.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zybo_expense_tracker/features/auth/bloc/auth_bloc.dart';
@@ -134,24 +135,30 @@ class _OtpScreenState extends State<OtpScreen> {
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
+            leadingWidth: 60,
             leading: Padding(
               padding: const EdgeInsets.only(left: 24.0),
-              child: Container(
-                margin: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.textSecondary.withValues(alpha: 0.3),
+              child: UnconstrainedBox(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.textSecondary.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      PhosphorIcons.caretLeft(),
+                      size: 16,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 16,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
             ),

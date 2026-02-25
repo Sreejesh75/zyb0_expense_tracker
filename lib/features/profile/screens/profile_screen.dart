@@ -70,6 +70,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _updateNickname(String newName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_nickname', newName);
+
+    if (!mounted) return;
+
+    setState(() {
+      _nickname = newName;
+    });
+  }
+
   Widget _pad(Widget child) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -104,7 +115,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 32),
 
             // NICKNAME SECTION
-            _pad(NicknameSection(nickname: _nickname)),
+            _pad(
+              NicknameSection(
+                nickname: _nickname,
+                onNicknameChanged: _updateNickname,
+              ),
+            ),
             const SizedBox(height: 32),
             const Divider(color: Colors.white10, thickness: 3, height: 3),
             const SizedBox(height: 32),

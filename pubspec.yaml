@@ -45,6 +45,8 @@ dependencies:
   phosphor_flutter: ^2.1.0
   intl: ^0.20.2
   shimmer: ^3.0.0
+  flutter_local_notifications: ^20.1.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -97,3 +99,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  image_path: "assets/images/zybo_symbol.png"
+  android: true
+  ios: true

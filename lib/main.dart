@@ -12,9 +12,12 @@ import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart
 import 'package:zybo_expense_tracker/features/categories/bloc/category_event.dart';
 import 'package:zybo_expense_tracker/features/categories/services/category_database.dart';
 import 'package:zybo_expense_tracker/features/categories/services/category_service.dart';
+import 'package:zybo_expense_tracker/core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService().init();
 
   final authService = AuthService();
 

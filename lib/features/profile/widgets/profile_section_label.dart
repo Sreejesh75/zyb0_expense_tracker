@@ -11,11 +11,11 @@ class ProfileSectionLabel extends StatelessWidget {
     return Text(
       text,
       style: GoogleFonts.inter(
-        fontWeight: FontWeight.w400,
-        fontSize: 12, // Usually slightly smaller for section headers
-        letterSpacing: -0.05 * 12,
-        color: Colors.white.withValues(alpha: 0.5),
-        height: 1.5,
+         fontWeight: FontWeight.w400,
+            fontSize: 14,
+            letterSpacing: -0.05 * 14,
+            height: 1.5,
+            color: Colors.white,
       ),
     );
   }

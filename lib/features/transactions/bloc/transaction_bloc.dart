@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zybo_expense_tracker/core/services/notification_service.dart';
 import 'package:zybo_expense_tracker/features/transactions/services/transaction_database.dart';
 import 'package:zybo_expense_tracker/features/transactions/services/transaction_service.dart';
 import 'transaction_event.dart';
@@ -48,6 +50,32 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         emit(TransactionLoaded([transaction, ...currentTransactions]));
       } else {
         emit(TransactionLoaded([transaction]));
+      }
+
+      // Check Notification Limit Alert
+      if (transaction.type == 'debit') {
+        final prefs = await SharedPreferences.getInstance();
+        final limit = prefs.getDouble('alert_limit') ?? 10000;
+
+        final allTxs = await localDb.getAllTransactions();
+        double currentMonthExpense = 0;
+        final now = DateTime.now();
+
+        for (var tx in allTxs) {
+          if (tx.type == 'debit' &&
+              tx.timestamp.month == now.month &&
+              tx.timestamp.year == now.year) {
+            currentMonthExpense += tx.amount;
+          }
+        }
+
+        // If pushing past limit, fire notification!
+        if (currentMonthExpense > limit) {
+          await NotificationService().showLimitExceededNotification(
+            limit,
+            currentMonthExpense,
+          );
+        }
       }
 
       // Try syncing immediately

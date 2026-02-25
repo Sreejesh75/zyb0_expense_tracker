@@ -361,7 +361,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
               );
             },
           ),
-          const Spacer(),
+          const SizedBox(height: 22),
 
           // Info Box
           Container(
@@ -393,7 +393,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 22),
 
           // Save Button
           SizedBox(
