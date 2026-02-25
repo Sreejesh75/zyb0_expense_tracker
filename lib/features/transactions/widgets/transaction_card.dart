@@ -59,7 +59,9 @@ class TransactionCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              _getCategoryIcon(transaction.category),
+              _getCategoryIcon(
+                transaction.categoryName ?? transaction.category_id,
+              ),
               color: Colors.white,
               size: 20,
             ),
@@ -85,7 +87,7 @@ class TransactionCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  transaction.category,
+                  transaction.categoryName ?? transaction.category_id,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(

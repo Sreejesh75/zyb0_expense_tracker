@@ -10,7 +10,8 @@ class CategoryDatabase {
       CREATE TABLE IF NOT EXISTS $tableName (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        isSynced INTEGER NOT NULL DEFAULT 0
+        is_synced INTEGER NOT NULL DEFAULT 0,
+        is_deleted INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -26,14 +27,19 @@ class CategoryDatabase {
 
   Future<void> deleteCategory(String id) async {
     final db = await DatabaseHelper.instance.database;
-    await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      tableName,
+      {'is_deleted': 1, 'is_synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> markAsSynced(String id) async {
     final db = await DatabaseHelper.instance.database;
     await db.update(
       tableName,
-      {'isSynced': 1},
+      {'is_synced': 1},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -41,7 +47,10 @@ class CategoryDatabase {
 
   Future<List<CategoryModel>> getAllCategories() async {
     final db = await DatabaseHelper.instance.database;
-    final List<Map<String, dynamic>> maps = await db.query(tableName);
+    final List<Map<String, dynamic>> maps = await db.query(
+      tableName,
+      where: 'is_deleted = 0',
+    );
 
     return List.generate(maps.length, (i) {
       return CategoryModel.fromDbMap(maps[i]);
@@ -52,7 +61,7 @@ class CategoryDatabase {
     final db = await DatabaseHelper.instance.database;
     final List<Map<String, dynamic>> maps = await db.query(
       tableName,
-      where: 'isSynced = ?',
+      where: 'is_synced = ?',
       whereArgs: [0],
     );
 

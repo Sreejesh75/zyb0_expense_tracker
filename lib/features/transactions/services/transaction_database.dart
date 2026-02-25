@@ -7,14 +7,15 @@ class TransactionDatabase {
 
   Future<void> createTable(Database db) async {
     await db.execute('''
-      CREATE TABLE $tableName (
+      CREATE TABLE IF NOT EXISTS $tableName (
         id TEXT PRIMARY KEY,
         note TEXT,
         amount REAL,
         type TEXT,
-        category TEXT,
+        category_id TEXT,
         timestamp TEXT,
-        synced INTEGER DEFAULT 0
+        is_synced INTEGER DEFAULT 0,
+        is_deleted INTEGER DEFAULT 0
       )
     ''');
   }
@@ -22,7 +23,7 @@ class TransactionDatabase {
   Future<void> insertTransaction(TransactionModel transaction) async {
     final db = await DatabaseHelper.instance.database;
     final map = transaction.toJson();
-    map['synced'] = 0; // Not synced by default
+    map['is_synced'] = 0; // Not synced by default
     await db.insert(
       tableName,
       map,
@@ -37,7 +38,7 @@ class TransactionDatabase {
     final placeholders = List.filled(ids.length, '?').join(',');
     await db.update(
       tableName,
-      {'synced': 1},
+      {'is_synced': 1},
       where: 'id IN ($placeholders)',
       whereArgs: ids,
     );
@@ -47,22 +48,30 @@ class TransactionDatabase {
     final db = await DatabaseHelper.instance.database;
     final List<Map<String, dynamic>> maps = await db.query(
       tableName,
-      where: 'synced = 0',
+      where: 'is_synced = 0',
     );
     return maps.map((map) => TransactionModel.fromJson(map)).toList();
   }
 
   Future<List<TransactionModel>> getAllTransactions() async {
     final db = await DatabaseHelper.instance.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      tableName,
-      orderBy: 'timestamp DESC',
-    );
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT t.*, c.name as categoryName
+      FROM $tableName t
+      LEFT JOIN categories c ON t.category_id = c.id
+      WHERE t.is_deleted = 0
+      ORDER BY t.timestamp DESC
+    ''');
     return maps.map((map) => TransactionModel.fromJson(map)).toList();
   }
 
   Future<void> deleteTransaction(String id) async {
     final db = await DatabaseHelper.instance.database;
-    await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      tableName,
+      {'is_deleted': 1, 'is_synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

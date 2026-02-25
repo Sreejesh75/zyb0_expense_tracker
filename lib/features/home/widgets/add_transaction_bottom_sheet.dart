@@ -63,7 +63,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
       type: isExpense
           ? 'debit'
           : 'credit', // Usually expense=debit, income=credit
-      category: selectedCategory!,
+      category_id: selectedCategory!,
       timestamp: DateTime.now(),
     );
 

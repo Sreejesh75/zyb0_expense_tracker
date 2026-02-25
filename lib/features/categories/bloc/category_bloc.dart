@@ -28,11 +28,10 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       // 1. Instantly load local data
       List<CategoryModel> localData = await localDb.getAllCategories();
 
-      // Seed default categories if literally empty
       if (localData.isEmpty) {
         final defaults = ['Food', 'Bills', 'Transport', 'Shopping'];
         for (var name in defaults) {
-          final cat = CategoryModel(id: _uuid.v4(), name: name, isSynced: 0);
+          final cat = CategoryModel(id: _uuid.v4(), name: name, is_synced: 0);
           await localDb.insertCategory(cat);
           localData.add(cat);
         }

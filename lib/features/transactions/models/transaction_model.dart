@@ -5,16 +5,22 @@ class TransactionModel extends Equatable {
   final String note;
   final double amount;
   final String type; // "credit" or "debit"
-  final String category;
+  final String category_id;
+  final String? categoryName; // Used for displaying the joined name
   final DateTime timestamp;
+  final int is_synced;
+  final int is_deleted;
 
   const TransactionModel({
     required this.id,
     required this.note,
     required this.amount,
     required this.type,
-    required this.category,
+    required this.category_id,
+    this.categoryName,
     required this.timestamp,
+    this.is_synced = 0,
+    this.is_deleted = 0,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -23,8 +29,16 @@ class TransactionModel extends Equatable {
       note: json['note'] ?? '',
       amount: (json['amount'] as num).toDouble(),
       type: json['type'] ?? 'debit',
-      category: json['category'] ?? json['category_id'] ?? '',
-      timestamp: DateTime.parse(json['timestamp']),
+      category_id:
+          json['category_id'] ??
+          json['category'] ??
+          '', // Fallbacks during transition
+      categoryName: json['categoryName'],
+      timestamp: json['timestamp'] != null
+          ? DateTime.parse(json['timestamp'])
+          : DateTime.now(),
+      is_synced: json['is_synced'] ?? (json['synced'] ?? 0),
+      is_deleted: json['is_deleted'] ?? 0,
     );
   }
 
@@ -34,8 +48,10 @@ class TransactionModel extends Equatable {
       'note': note,
       'amount': amount,
       'type': type,
-      'category': category,
+      'category_id': category_id,
       'timestamp': timestamp.toIso8601String(),
+      'is_synced': is_synced,
+      'is_deleted': is_deleted,
     };
   }
 
@@ -45,11 +61,22 @@ class TransactionModel extends Equatable {
       'note': note,
       'amount': amount,
       'type': type,
-      'category_id': category, // Based on API specs
+      'category_id': category_id,
       'timestamp': timestamp.toIso8601String(),
+      'is_deleted': is_deleted,
     };
   }
 
   @override
-  List<Object?> get props => [id, note, amount, type, category, timestamp];
+  List<Object?> get props => [
+    id,
+    note,
+    amount,
+    type,
+    category_id,
+    categoryName,
+    timestamp,
+    is_synced,
+    is_deleted,
+  ];
 }

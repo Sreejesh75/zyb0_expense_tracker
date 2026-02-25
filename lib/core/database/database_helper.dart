@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -44,10 +44,12 @@ class DatabaseHelper {
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
+    if (oldVersion < 4) {
+      // For a major schema change in dev involving UUIDs and column renaming
+      await db.execute('DROP TABLE IF EXISTS transactions');
+      await db.execute('DROP TABLE IF EXISTS categories');
+
       await TransactionDatabase().createTable(db);
-    }
-    if (oldVersion < 3) {
       await CategoryDatabase().createTable(db);
     }
   }
