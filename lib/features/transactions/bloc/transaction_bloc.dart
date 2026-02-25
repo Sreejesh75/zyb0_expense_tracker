@@ -103,7 +103,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     if (state is TransactionLoaded) {
       final currentState = (state as TransactionLoaded).transactions;
-      // We could add a TransactionSyncing state if needed, but keeping it simple
+      emit(TransactionSyncing(currentState));
 
       try {
         // 1. STEP A: Clean up Deletions (Cloud Purge)

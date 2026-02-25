@@ -14,6 +14,10 @@ import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_state.dart';
 import 'package:zybo_expense_tracker/features/transactions/widgets/transaction_card.dart';
+import 'package:zybo_expense_tracker/core/widgets/shimmer_loading.dart';
+import 'package:zybo_expense_tracker/core/widgets/sync_indicator.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -139,11 +143,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(width: 8),
+                BlocBuilder<CategoryBloc, CategoryState>(
+                  builder: (context, catState) {
+                    return BlocBuilder<TransactionBloc, TransactionState>(
+                      builder: (context, txState) {
+                        bool isSyncing =
+                            catState is CategorySyncing ||
+                            txState is TransactionSyncing;
+                        if (isSyncing) {
+                          return const SyncIndicator();
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 22),
             BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
+                if (state is TransactionLoading) {
+                  return Column(
+                    children: [
+                      Row(
+                        children: const [
+                          Expanded(child: BalanceCardShimmer()),
+                          SizedBox(width: 10),
+                          Expanded(child: BalanceCardShimmer()),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const ShimmerLoading(width: double.infinity, height: 100),
+                    ],
+                  );
+                }
+
                 double totalIncome = 0;
                 double totalExpense = 0;
                 bool hasTransactions = false;
@@ -206,10 +242,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: BlocBuilder<TransactionBloc, TransactionState>(
                 builder: (context, state) {
                   if (state is TransactionLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
+                    return ListView.builder(
+                      itemCount: 5,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) =>
+                          const TransactionCardShimmer(),
                     );
                   } else if (state is TransactionLoaded) {
                     if (state.transactions.isEmpty) {

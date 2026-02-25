@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_state.dart';
 import 'package:zybo_expense_tracker/features/transactions/widgets/transaction_card.dart';
+import 'package:zybo_expense_tracker/core/widgets/shimmer_loading.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -33,10 +33,10 @@ class TransactionsScreen extends StatelessWidget {
               child: BlocBuilder<TransactionBloc, TransactionState>(
                 builder: (context, state) {
                   if (state is TransactionLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
+                    return ListView.builder(
+                      itemCount: 8,
+                      itemBuilder: (context, index) =>
+                          const TransactionCardShimmer(),
                     );
                   } else if (state is TransactionLoaded) {
                     if (state.transactions.isEmpty) {

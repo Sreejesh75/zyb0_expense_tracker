@@ -28,3 +28,11 @@ class TransactionError extends TransactionState {
   @override
   List<Object> get props => [message];
 }
+
+class TransactionSyncing extends TransactionState {
+  final List<TransactionModel> transactions;
+  const TransactionSyncing(this.transactions);
+
+  @override
+  List<Object> get props => [transactions];
+}
