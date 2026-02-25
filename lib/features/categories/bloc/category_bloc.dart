@@ -30,7 +30,7 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
 
       bool isEmpty = await localDb.isTableEmpty();
       if (isEmpty) {
-        final defaults = ['Food', 'Bills', 'Transport', 'Shopping'];
+        final defaults = ['Grocery', 'Electricity', 'Water'];
         for (var name in defaults) {
           final cat = CategoryModel(id: _uuid.v4(), name: name, is_synced: 0);
           await localDb.insertCategory(cat);
@@ -119,35 +119,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     if (state is CategoryLoaded) {
       final currentState = (state as CategoryLoaded).categories;
       emit(CategorySyncing(currentState));
-
-      try {
-        // 1. STEP A: Clean up Deletions (Cloud Purge)
-        final deletedIds = await localDb.getDeletedCategoryIds();
-        if (deletedIds.isNotEmpty) {
-          final confirmedDeletedIds = await apiService.deleteCategories(
-            deletedIds,
-          );
-          if (confirmedDeletedIds.isNotEmpty) {
-            await localDb.hardDeleteCategories(confirmedDeletedIds);
-          }
-        }
-
-        // 2. STEP B: Upload New Data (Cloud Backup)
-        final unsynced = await localDb.getUnsyncedActiveCategories();
-        if (unsynced.isNotEmpty) {
-          final syncedIds = await apiService.syncCategories(unsynced);
-          if (syncedIds.isNotEmpty) {
-            await localDb.markAsSynced(syncedIds);
-          }
-        }
-
-        // Return to cleanly loaded state
-        final refreshedData = await localDb.getAllCategories();
-        emit(CategoryLoaded(refreshedData));
-      } catch (_) {
-        // Default back to loaded on error
-        emit(CategoryLoaded(currentState));
-      }
     }
   }
 }

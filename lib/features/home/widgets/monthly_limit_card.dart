@@ -24,9 +24,9 @@ class MonthlyLimitCard extends StatelessWidget {
     double progress = 0;
 
     if (hasTransactions) {
-      isExceeded = currentAmount <= limitAmount;
-      if (currentAmount > 0) {
-        progress = limitAmount / currentAmount;
+      isExceeded = currentAmount >= limitAmount;
+      if (limitAmount > 0) {
+        progress = currentAmount / limitAmount;
       } else {
         progress = 1.0;
       }

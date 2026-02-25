@@ -1,11 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart';
-import 'package:zybo_expense_tracker/features/categories/bloc/category_event.dart';
-import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
-import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
+import 'package:zybo_expense_tracker/core/utils/sync_manager.dart';
 
 class SyncCloudDialog extends StatefulWidget {
   final bool initialEnabled;
@@ -157,12 +153,9 @@ class _SyncCloudDialogState extends State<SyncCloudDialog> {
                       height: 48,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.read<CategoryBloc>().add(
-                            SyncCategoriesEvent(),
-                          );
-                          context.read<TransactionBloc>().add(
-                            SyncTransactionsEvent(),
-                          );
+                          // The SyncManager now strictly enforces:
+                          // Tx Delete -> Cat Delete -> Cat Upload -> Tx Upload
+                          SyncManager.performFullSync(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Synchronizing cloud backup...'),

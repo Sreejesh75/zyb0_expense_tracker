@@ -45,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: AppColors.background,
       body: Center(
         child: Image.asset(
-          'assets/images/logo_zybo.jpeg',
+          'assets/images/logo_zybo.png',
           width: 150, // Adjust size based on actual logo asset
           height: 150,
           fit: BoxFit.contain,

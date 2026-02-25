@@ -19,7 +19,8 @@ class AddTransactionBottomSheet extends StatefulWidget {
 
 class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
   bool isExpense = true;
-  String? selectedCategory;
+  String? selectedCategoryId;
+  String? selectedCategoryName;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
 
@@ -49,7 +50,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
       return;
     }
 
-    if (selectedCategory == null) {
+    if (selectedCategoryId == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please select a category')));
@@ -63,7 +64,8 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
       type: isExpense
           ? 'debit'
           : 'credit', // Usually expense=debit, income=credit
-      category_id: selectedCategory!,
+      category_id: selectedCategoryId!,
+      categoryName: selectedCategoryName,
       timestamp: DateTime.now(),
     );
 
@@ -277,15 +279,11 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
           // Categories Options
           BlocBuilder<CategoryBloc, CategoryState>(
             builder: (context, state) {
-              List<String> displayCategories = [];
+              List<dynamic> displayCategories = [];
               if (state is CategoryLoaded) {
-                displayCategories = state.categories
-                    .map((c) => c.name)
-                    .toList();
+                displayCategories = state.categories;
               } else if (state is CategorySyncing) {
-                displayCategories = state.categories
-                    .map((c) => c.name)
-                    .toList();
+                displayCategories = state.categories;
               }
 
               if (displayCategories.isEmpty && state is CategoryLoading) {
@@ -300,12 +298,16 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
               }
 
               // Auto-select first if none is selected
-              if (selectedCategory == null && displayCategories.isNotEmpty) {
-                selectedCategory = displayCategories.first;
-              } else if (selectedCategory != null &&
-                  !displayCategories.contains(selectedCategory)) {
-                selectedCategory = displayCategories.isNotEmpty
-                    ? displayCategories.first
+              if (selectedCategoryId == null && displayCategories.isNotEmpty) {
+                selectedCategoryId = displayCategories.first.id;
+                selectedCategoryName = displayCategories.first.name;
+              } else if (selectedCategoryId != null &&
+                  !displayCategories.any((c) => c.id == selectedCategoryId)) {
+                selectedCategoryId = displayCategories.isNotEmpty
+                    ? displayCategories.first.id
+                    : null;
+                selectedCategoryName = displayCategories.isNotEmpty
+                    ? displayCategories.first.name
                     : null;
               }
 
@@ -313,11 +315,16 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: displayCategories.map((cat) {
-                    bool isSelected = selectedCategory == cat;
+                    bool isSelected = selectedCategoryId == cat.id;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: GestureDetector(
-                        onTap: () => setState(() => selectedCategory = cat),
+                        onTap: () {
+                          setState(() {
+                            selectedCategoryId = cat.id;
+                            selectedCategoryName = cat.name;
+                          });
+                        },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -337,7 +344,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                             ),
                           ),
                           child: Text(
-                            cat,
+                            cat.name,
                             style: TextStyle(
                               fontFamily: 'Helvetica Neue',
                               fontWeight: FontWeight.w400,

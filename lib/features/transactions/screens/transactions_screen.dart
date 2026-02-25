@@ -38,8 +38,12 @@ class TransactionsScreen extends StatelessWidget {
                       itemBuilder: (context, index) =>
                           const TransactionCardShimmer(),
                     );
-                  } else if (state is TransactionLoaded) {
-                    if (state.transactions.isEmpty) {
+                  } else if (state is TransactionLoaded ||
+                      state is TransactionSyncing) {
+                    final txs = state is TransactionLoaded
+                        ? state.transactions
+                        : (state as TransactionSyncing).transactions;
+                    if (txs.isEmpty) {
                       return Center(
                         child: Text(
                           "No transactions yet.",
@@ -54,11 +58,11 @@ class TransactionsScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(
                         bottom: 80,
                       ), // Avoid overlap with fab/navbar
-                      itemCount: state.transactions.length,
+                      itemCount: txs.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        final tx = state.transactions[index];
+                        final tx = txs[index];
                         return TransactionCard(
                           transaction: tx,
                           onDelete: () {

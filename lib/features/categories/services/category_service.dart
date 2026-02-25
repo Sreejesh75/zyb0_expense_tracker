@@ -50,48 +50,72 @@ class CategoryService {
   Future<List<String>> syncCategories(List<CategoryModel> categories) async {
     if (categories.isEmpty) return [];
 
-    try {
-      final requestData = {
-        'categories': categories.map((c) => c.toApiJson()).toList(),
-      };
+    List<String> syncedIds = [];
+    for (var cat in categories) {
+      try {
+        final payload = cat.toApiJson();
 
-      final response = await _dio.post(
-        ApiConstants.addCategories,
-        data: requestData,
-      );
+        final response = await _dio.post(
+          ApiConstants.addCategories,
+          data: payload,
+        );
 
-      final data = response.data is String
-          ? jsonDecode(response.data)
-          : response.data;
-      if (data['status'] == 'success') {
-        final List<dynamic> rawIds = data['synced_ids'] ?? [];
-        return rawIds.map((e) => e.toString()).toList();
+        final data = response.data is String
+            ? jsonDecode(response.data)
+            : response.data;
+
+        // Assuming either it indicates success or echoes back the ID
+        if (data['status'] == 'success') {
+          syncedIds.add(cat.id);
+        } else if (data['synced_ids'] != null &&
+            data['synced_ids'].contains(cat.id)) {
+          syncedIds.add(cat.id);
+        }
+      } catch (e) {
+        print('Error syncing category ${cat.id}: $e');
       }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to sync categories: $e');
     }
+    return syncedIds;
   }
 
   Future<List<String>> deleteCategories(List<String> ids) async {
     if (ids.isEmpty) return [];
 
-    try {
-      final response = await _dio.delete(
-        ApiConstants.deleteCategories,
-        data: {'ids': ids},
-      );
+    List<String> deletedIds = [];
+    for (String id in ids) {
+      try {
+        final response = await _dio.delete(
+          ApiConstants.deleteCategories,
+          data: {
+            'ids': [id],
+            'category_id': id,
+          },
+        );
 
-      final data = response.data is String
-          ? jsonDecode(response.data)
-          : response.data;
-      if (data['status'] == 'success') {
-        final List<dynamic> rawIds = data['deleted_ids'] ?? [];
-        return rawIds.map((e) => e.toString()).toList();
+        final data = response.data is String
+            ? jsonDecode(response.data)
+            : response.data;
+
+        // Check both 'success' status or if the ID is just returned in a list
+        if (data['status'] == 'success') {
+          deletedIds.add(id);
+        } else if (data['deleted_ids'] != null &&
+            data['deleted_ids'].contains(id)) {
+          deletedIds.add(id);
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 404) {
+          // If it's already 404 Not Found on the server, it is successfully deleted.
+          deletedIds.add(id);
+        } else {
+          print(
+            'Error deleting category $id: ${e.response?.statusCode} - ${e.response?.data}',
+          );
+        }
+      } catch (e) {
+        print('Error deleting category $id: $e');
       }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to delete categories: $e');
     }
+    return deletedIds;
   }
 }

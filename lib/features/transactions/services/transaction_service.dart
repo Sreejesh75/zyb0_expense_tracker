@@ -48,55 +48,78 @@ class TransactionService {
     }
   }
 
-  // Batch sync up to the server
   Future<List<String>> syncTransactions(
     List<TransactionModel> transactions,
   ) async {
     if (transactions.isEmpty) return [];
 
-    try {
-      final requestData = {
-        'transactions': transactions.map((t) => t.toApiJson()).toList(),
-      };
+    List<String> syncedIds = [];
+    for (var tx in transactions) {
+      try {
+        final payload = tx.toApiJson();
 
-      final response = await _dio.post(
-        ApiConstants.addTransactions,
-        data: requestData,
-      );
+        final response = await _dio.post(
+          ApiConstants.addTransactions,
+          data: payload,
+        );
 
-      final data = response.data is String
-          ? jsonDecode(response.data)
-          : response.data;
-      if (data['status'] == 'success') {
-        final List<dynamic> rawIds = data['synced_ids'] ?? [];
-        return rawIds.map((e) => e.toString()).toList();
+        final data = response.data is String
+            ? jsonDecode(response.data)
+            : response.data;
+
+        // Assuming either it indicates success or echoes back the ID
+        if (data['status'] == 'success') {
+          syncedIds.add(tx.id);
+        } else if (data['synced_ids'] != null &&
+            data['synced_ids'].contains(tx.id)) {
+          syncedIds.add(tx.id);
+        }
+      } catch (e) {
+        print('Error syncing transaction ${tx.id}: $e');
       }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to sync transactions: $e');
     }
+    return syncedIds;
   }
 
   // Batch delete on the server
   Future<List<String>> deleteTransactions(List<String> ids) async {
     if (ids.isEmpty) return [];
 
-    try {
-      final response = await _dio.delete(
-        ApiConstants.deleteTransactions,
-        data: {'ids': ids},
-      );
+    List<String> deletedIds = [];
+    for (String id in ids) {
+      try {
+        final response = await _dio.delete(
+          ApiConstants.deleteTransactions,
+          data: {
+            'ids': [id],
+            'transaction_id': id,
+          },
+        );
 
-      final data = response.data is String
-          ? jsonDecode(response.data)
-          : response.data;
-      if (data['status'] == 'success') {
-        final List<dynamic> rawIds = data['deleted_ids'] ?? [];
-        return rawIds.map((e) => e.toString()).toList();
+        final data = response.data is String
+            ? jsonDecode(response.data)
+            : response.data;
+
+        // Check both 'success' status or if the ID is just returned in a list
+        if (data['status'] == 'success') {
+          deletedIds.add(id);
+        } else if (data['deleted_ids'] != null &&
+            data['deleted_ids'].contains(id)) {
+          deletedIds.add(id);
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 404) {
+          // If it's already 404 Not Found on the server, it is successfully deleted.
+          deletedIds.add(id);
+        } else {
+          print(
+            'Error deleting transaction $id: ${e.response?.statusCode} - ${e.response?.data}',
+          );
+        }
+      } catch (e) {
+        print('Error deleting transaction $id: $e');
       }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to delete transactions: $e');
     }
+    return deletedIds;
   }
 }

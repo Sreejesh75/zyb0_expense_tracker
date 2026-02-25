@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:intl/intl.dart';
 
 class TransactionModel extends Equatable {
   final String id;
@@ -58,12 +59,11 @@ class TransactionModel extends Equatable {
   Map<String, dynamic> toApiJson() {
     return {
       'id': id,
-      'note': note,
       'amount': amount,
+      'note': note,
       'type': type,
       'category_id': category_id,
-      'timestamp': timestamp.toIso8601String(),
-      'is_deleted': is_deleted,
+      'timestamp': DateFormat('yyyy-MM-dd HH:mm:ss').format(timestamp),
     };
   }
 

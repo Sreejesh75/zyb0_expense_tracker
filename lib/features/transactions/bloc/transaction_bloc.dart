@@ -73,13 +73,20 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // Optimistic delete: Mark as deleted in local DB
       await localDb.deleteTransaction(event.id);
 
-      if (state is TransactionLoaded) {
-        final currentTransactions = (state as TransactionLoaded).transactions;
-        emit(
-          TransactionLoaded(
-            currentTransactions.where((t) => t.id != event.id).toList(),
-          ),
-        );
+      if (state is TransactionLoaded || state is TransactionSyncing) {
+        final currentTransactions = state is TransactionLoaded
+            ? (state as TransactionLoaded).transactions
+            : (state as TransactionSyncing).transactions;
+
+        final updatedTransactions = currentTransactions
+            .where((t) => t.id != event.id)
+            .toList();
+
+        if (state is TransactionLoaded) {
+          emit(TransactionLoaded(updatedTransactions));
+        } else {
+          emit(TransactionSyncing(updatedTransactions));
+        }
       }
 
       // Try background sync for deletion
@@ -104,35 +111,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     if (state is TransactionLoaded) {
       final currentState = (state as TransactionLoaded).transactions;
       emit(TransactionSyncing(currentState));
-
-      try {
-        // 1. STEP A: Clean up Deletions (Cloud Purge)
-        final deletedIds = await localDb.getDeletedTransactionIds();
-        if (deletedIds.isNotEmpty) {
-          final confirmedDeletedIds = await apiService.deleteTransactions(
-            deletedIds,
-          );
-          if (confirmedDeletedIds.isNotEmpty) {
-            await localDb.hardDeleteTransactions(confirmedDeletedIds);
-          }
-        }
-
-        // 2. STEP B: Upload New Data (Cloud Backup)
-        final unsynced = await localDb.getUnsyncedActiveTransactions();
-        if (unsynced.isNotEmpty) {
-          final syncedIds = await apiService.syncTransactions(unsynced);
-          if (syncedIds.isNotEmpty) {
-            await localDb.markAsSynced(syncedIds);
-          }
-        }
-
-        // Return to cleanly loaded state
-        final refreshedData = await localDb.getAllTransactions();
-        emit(TransactionLoaded(refreshedData));
-      } catch (_) {
-        // Fallback to current state on error
-        emit(TransactionLoaded(currentState));
-      }
     }
   }
 }

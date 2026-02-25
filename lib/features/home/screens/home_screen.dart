@@ -184,9 +184,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 double totalExpense = 0;
                 bool hasTransactions = false;
 
+                List<dynamic> currentTransactions = [];
                 if (state is TransactionLoaded) {
-                  hasTransactions = state.transactions.isNotEmpty;
-                  for (var tx in state.transactions) {
+                  currentTransactions = state.transactions;
+                } else if (state is TransactionSyncing) {
+                  currentTransactions = state.transactions;
+                }
+
+                if (currentTransactions.isNotEmpty) {
+                  hasTransactions = true;
+                  for (var tx in currentTransactions) {
                     if (tx.type == 'credit') {
                       totalIncome += tx.amount;
                     } else if (tx.type == 'debit') {
@@ -228,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MonthlyLimitCard(
                       title: "Monthly Limit",
                       currentAmount:
-                          totalIncome, // This represents the total balance
+                          totalExpense, // Tracks expenses as requested
                       limitAmount: _alertLimit,
                       hasTransactions: hasTransactions,
                     ),
@@ -248,8 +255,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) =>
                           const TransactionCardShimmer(),
                     );
-                  } else if (state is TransactionLoaded) {
-                    if (state.transactions.isEmpty) {
+                  } else if (state is TransactionLoaded ||
+                      state is TransactionSyncing) {
+                    final txs = state is TransactionLoaded
+                        ? state.transactions
+                        : (state as TransactionSyncing).transactions;
+
+                    if (txs.isEmpty) {
                       return const Center(
                         child: Text(
                           "No recent transactions",
@@ -273,11 +285,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         Expanded(
                           child: ListView.separated(
                             padding: const EdgeInsets.only(bottom: 80),
-                            itemCount: state.transactions.length,
+                            itemCount: txs.length,
                             separatorBuilder: (context, index) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final tx = state.transactions[index];
+                              final tx = txs[index];
                               return TransactionCard(
                                 transaction: tx,
                                 onDelete: () {

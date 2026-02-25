@@ -39,7 +39,7 @@ class CategoryModel {
   }
 
   Map<String, dynamic> toApiJson() {
-    return {'id': id, 'name': name, 'is_deleted': is_deleted};
+    return {'id': id, 'name': name};
   }
 
   CategoryModel copyWith({

@@ -63,7 +63,7 @@ class TransactionCard extends StatelessWidget {
                 transaction.categoryName ?? transaction.category_id,
               ),
               color: Colors.white,
-              size: 20,
+              size: 16,
             ),
           ),
           const SizedBox(width: 12),
@@ -152,6 +152,12 @@ class TransactionCard extends StatelessWidget {
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
+      case 'grocery':
+        return PhosphorIcons.shoppingCart();
+      case 'electricity':
+        return PhosphorIcons.lightning();
+      case 'water':
+        return PhosphorIcons.drop();
       case 'food':
         return PhosphorIcons.hamburger();
       case 'bills':

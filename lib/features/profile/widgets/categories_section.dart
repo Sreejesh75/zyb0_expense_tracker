@@ -11,6 +11,27 @@ class CategoriesSection extends StatelessWidget {
 
   const CategoriesSection({super.key, required this.categoryController});
 
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'grocery':
+        return PhosphorIcons.shoppingCart();
+      case 'electricity':
+        return PhosphorIcons.lightning();
+      case 'water':
+        return PhosphorIcons.drop();
+      case 'food':
+        return PhosphorIcons.hamburger();
+      case 'bills':
+        return PhosphorIcons.receipt();
+      case 'transport':
+        return PhosphorIcons.bus();
+      case 'shopping':
+        return PhosphorIcons.shoppingCart();
+      default:
+        return PhosphorIcons.list();
+    }
+  }
+
   Widget _buildCategoryItem(
     BuildContext context,
     String id,
@@ -22,13 +43,31 @@ class CategoriesSection extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            name,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-              color: Colors.white,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  _getCategoryIcon(name),
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                name,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
           GestureDetector(
             onTap: () {
