@@ -54,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: false, // Prevents nav bar from moving up
       body: SafeArea(
         child: Stack(
           children: [
@@ -67,38 +68,39 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             // Add Transaction Button
-            Positioned(
-              right: 24,
-              bottom: 112,
-              child: GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => Padding(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom,
+            if (_selectedIndex != 2)
+              Positioned(
+                right: 24,
+                bottom: 112,
+                child: GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: const AddTransactionBottomSheet(),
                       ),
-                      child: const AddTransactionBottomSheet(),
+                    );
+                  },
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF20DE39), Color(0xFF147721)],
+                      ),
                     ),
-                  );
-                },
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFF20DE39), Color(0xFF147721)],
-                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 28),
                   ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 28),
                 ),
               ),
-            ),
 
             // Custom Floating Bottom Navigation Bar
             Positioned(
@@ -187,7 +189,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     MonthlyLimitCard(
                       title: "Monthly Limit",
-                      currentAmount: totalExpense,
+                      currentAmount:
+                          totalIncome, // This represents the total balance
                       limitAmount: _alertLimit,
                     ),
                   ],

@@ -6,6 +6,8 @@ import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
 import 'package:zybo_expense_tracker/features/transactions/models/transaction_model.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_state.dart';
 
 class AddTransactionBottomSheet extends StatefulWidget {
   const AddTransactionBottomSheet({super.key});
@@ -17,9 +19,7 @@ class AddTransactionBottomSheet extends StatefulWidget {
 
 class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
   bool isExpense = true;
-  String selectedCategory = "Bills";
-
-  final List<String> categories = ["Food", "Bills", "Transport", "Shopping"];
+  String? selectedCategory;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
 
@@ -49,6 +49,13 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
       return;
     }
 
+    if (selectedCategory == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      return;
+    }
+
     final transaction = TransactionModel(
       id: const Uuid().v4(),
       note: title,
@@ -56,7 +63,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
       type: isExpense
           ? 'debit'
           : 'credit', // Usually expense=debit, income=credit
-      category: selectedCategory,
+      category: selectedCategory!,
       timestamp: DateTime.now(),
     );
 
@@ -268,48 +275,84 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
           const SizedBox(height: 12),
 
           // Categories Options
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: categories.map((cat) {
-                bool isSelected = selectedCategory == cat;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: GestureDetector(
-                    onTap: () => setState(() => selectedCategory = cat),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary.withValues(
-                                alpha: 0.15,
-                              ) // Subtle primary fill
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.white.withValues(alpha: 0.1),
-                        ),
-                      ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          fontFamily: 'Helvetica Neue',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 15,
-                          letterSpacing: -0.03 * 15,
-                          color: isSelected ? Colors.white : Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ),
+          BlocBuilder<CategoryBloc, CategoryState>(
+            builder: (context, state) {
+              List<String> displayCategories = [];
+              if (state is CategoryLoaded) {
+                displayCategories = state.categories
+                    .map((c) => c.name)
+                    .toList();
+              } else if (state is CategorySyncing) {
+                displayCategories = state.categories
+                    .map((c) => c.name)
+                    .toList();
+              }
+
+              if (displayCategories.isEmpty && state is CategoryLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (displayCategories.isEmpty) {
+                return const Text(
+                  "No categories available",
+                  style: TextStyle(color: Colors.white54),
                 );
-              }).toList(),
-            ),
+              }
+
+              // Auto-select first if none is selected
+              if (selectedCategory == null && displayCategories.isNotEmpty) {
+                selectedCategory = displayCategories.first;
+              } else if (selectedCategory != null &&
+                  !displayCategories.contains(selectedCategory)) {
+                selectedCategory = displayCategories.isNotEmpty
+                    ? displayCategories.first
+                    : null;
+              }
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: displayCategories.map((cat) {
+                    bool isSelected = selectedCategory == cat;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: GestureDetector(
+                        onTap: () => setState(() => selectedCategory = cat),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(
+                                    alpha: 0.15,
+                                  ) // Subtle primary fill
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Text(
+                            cat,
+                            style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 15,
+                              letterSpacing: -0.03 * 15,
+                              color: isSelected ? Colors.white : Colors.white70,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              );
+            },
           ),
           const Spacer(),
 

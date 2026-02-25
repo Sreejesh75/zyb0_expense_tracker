@@ -45,7 +45,7 @@ class CustomNavBar extends StatelessWidget {
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: isSelected ?  AppColors.primary : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(

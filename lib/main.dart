@@ -8,6 +8,10 @@ import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
 import 'package:zybo_expense_tracker/features/transactions/services/transaction_database.dart';
 import 'package:zybo_expense_tracker/features/transactions/services/transaction_service.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_event.dart';
+import 'package:zybo_expense_tracker/features/categories/services/category_database.dart';
+import 'package:zybo_expense_tracker/features/categories/services/category_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +36,12 @@ class MyApp extends StatelessWidget {
             localDb: TransactionDatabase(),
             apiService: TransactionService(authService),
           )..add(LoadTransactionsEvent()),
+        ),
+        BlocProvider<CategoryBloc>(
+          create: (context) => CategoryBloc(
+            localDb: CategoryDatabase(),
+            apiService: CategoryService(authService),
+          )..add(LoadCategoriesEvent()),
         ),
       ],
       child: MaterialApp(

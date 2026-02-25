@@ -18,15 +18,21 @@ class MonthlyLimitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double progress = limitAmount > 0 ? (currentAmount / limitAmount) : 0;
-    bool isExceeded = currentAmount >= limitAmount;
+    bool isExceeded = currentAmount <= limitAmount;
+    double progress = 0;
+
+    if (currentAmount > 0) {
+      progress = limitAmount / currentAmount;
+    } else {
+      progress = 1.0;
+    }
 
     if (progress > 1.0) progress = 1.0;
     if (progress < 0.0) progress = 0.0;
 
     int remainingPercent = isExceeded ? 0 : ((1.0 - progress) * 100).round();
     final formatter = NumberFormat("#,##0");
-    final displayedCurrent = isExceeded ? limitAmount : currentAmount;
+    final displayedCurrent = currentAmount;
 
     return Container(
       width: double.infinity,
@@ -67,7 +73,9 @@ class MonthlyLimitCard extends StatelessWidget {
                       fontSize: 16,
                       letterSpacing: -0.05 * 16,
                       height: 1.5,
-                      color: Colors.white,
+                      color: isExceeded
+                          ? const Color(0xFFFF3437)
+                          : Colors.white,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -83,12 +91,15 @@ class MonthlyLimitCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (isExceeded)
-                Icon(
-                  PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
-                  color: const Color(0xFF1DC533),
-                  size: 20,
-                ),
+              Icon(
+                isExceeded
+                    ? PhosphorIcons.warningCircle(PhosphorIconsStyle.fill)
+                    : PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
+                color: isExceeded
+                    ? const Color(0xFFFF3437)
+                    : const Color(0xFF1DC533),
+                size: 20,
+              ),
             ],
           ),
           const SizedBox(height: 16),

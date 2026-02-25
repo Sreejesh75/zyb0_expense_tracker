@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:zybo_expense_tracker/features/transactions/services/transaction_database.dart';
+import 'package:zybo_expense_tracker/features/categories/services/category_database.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -20,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -38,11 +39,16 @@ class DatabaseHelper {
 
     // Transactions table
     await TransactionDatabase().createTable(db);
+    // Categories table
+    await CategoryDatabase().createTable(db);
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await TransactionDatabase().createTable(db);
+    }
+    if (oldVersion < 3) {
+      await CategoryDatabase().createTable(db);
     }
   }
 
