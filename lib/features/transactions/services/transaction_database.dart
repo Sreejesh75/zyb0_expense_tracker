@@ -22,8 +22,19 @@ class TransactionDatabase {
 
   Future<void> insertTransaction(TransactionModel transaction) async {
     final db = await DatabaseHelper.instance.database;
+
+    // Safety check: Don't overwrite if we have a local "is_deleted" flag
+    final existing = await db.query(
+      tableName,
+      where: 'id = ? AND is_deleted = 1',
+      whereArgs: [transaction.id],
+    );
+
+    if (existing.isNotEmpty) return;
+
     final map = transaction.toJson();
-    map['is_synced'] = 0; // Not synced by default
+    // Maintain sync status if provided, otherwise default to 0
+    map['is_synced'] = transaction.is_synced;
     await db.insert(
       tableName,
       map,

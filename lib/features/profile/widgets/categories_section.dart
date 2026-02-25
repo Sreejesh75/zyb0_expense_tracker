@@ -44,7 +44,7 @@ class CategoriesSection extends StatelessWidget {
                 ),
               ),
               child: Icon(
-                PhosphorIcons.trash(),
+                PhosphorIcons.trashSimple(),
                 color: const Color(0xFFFF3437),
                 size: 16,
               ),

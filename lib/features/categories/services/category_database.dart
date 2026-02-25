@@ -18,6 +18,16 @@ class CategoryDatabase {
 
   Future<void> insertCategory(CategoryModel category) async {
     final db = await DatabaseHelper.instance.database;
+
+    // Safety check: Don't overwrite if we have a local "is_deleted" flag
+    final existing = await db.query(
+      tableName,
+      where: 'id = ? AND is_deleted = 1',
+      whereArgs: [category.id],
+    );
+
+    if (existing.isNotEmpty) return;
+
     await db.insert(
       tableName,
       category.toDbMap(),

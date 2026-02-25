@@ -23,23 +23,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
     try {
       // 1. Instantly load and show local data
+      // NO automatic cloud fetch here to prevent data "revival" issues.
       final localData = await localDb.getAllTransactions();
       emit(TransactionLoaded(localData));
-
-      // 2. Fetch latest from server & update local
-      try {
-        final serverData = await apiService.getTransactions();
-        if (serverData.isNotEmpty) {
-          for (var tx in serverData) {
-            await localDb.insertTransaction(tx);
-            await localDb.markAsSynced([tx.id]);
-          }
-          final newLocalData = await localDb.getAllTransactions();
-          emit(TransactionLoaded(newLocalData));
-        }
-      } catch (_) {
-        // Silent fail for server fetch if offline
-      }
     } catch (e) {
       emit(TransactionError("Failed to load transactions: $e"));
     }

@@ -39,21 +39,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       }
 
       emit(CategoryLoaded(localData));
-
-      // 2. Fetch latest from server
-      try {
-        final serverData = await apiService.getCategories();
-        if (serverData.isNotEmpty) {
-          for (var cat in serverData) {
-            await localDb.insertCategory(cat);
-            await localDb.markAsSynced([cat.id]);
-          }
-          final newLocalData = await localDb.getAllCategories();
-          emit(CategoryLoaded(newLocalData));
-        }
-      } catch (_) {
-        // Silent fail for server fetch if offline
-      }
     } catch (e) {
       emit(CategoryError("Failed to load categories: $e"));
     }
