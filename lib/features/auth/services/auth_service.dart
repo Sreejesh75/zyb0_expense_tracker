@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zybo_expense_tracker/core/constants/api_constants.dart';
+import 'package:zybo_expense_tracker/core/database/database_helper.dart';
 
 class AuthService {
   final Dio _dio;
@@ -62,6 +63,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     await prefs.setString('user_nickname', nickname);
+
+    // Save to SQLite as requested
+    await DatabaseHelper.instance.saveUserProfile(nickname, token);
   }
 
   /// Read Token from SharedPreferences

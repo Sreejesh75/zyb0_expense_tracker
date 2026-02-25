@@ -5,8 +5,8 @@ class AppColors {
 
   static const Color background = Color(0xFF0B0B0B);
   static const Color primary = Color(
-    0xFF4B42FF,
-  ); // Matches the new blue from screenshot
+    0xFF312ECB,
+  ); // Matches the new primary color
   static const Color textPrimary = Colors.white;
   static const Color linkBlue = Color(0xFF007AFF);
   static const Color textSecondary = Color(0xFFAAAAAA);

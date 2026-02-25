@@ -1,0 +1,158 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
+import 'package:zybo_expense_tracker/features/home/widgets/balance_card.dart';
+import 'package:zybo_expense_tracker/features/home/widgets/custom_nav_bar.dart';
+import 'package:zybo_expense_tracker/features/home/widgets/monthly_limit_card.dart';
+import 'package:zybo_expense_tracker/features/home/widgets/add_transaction_bottom_sheet.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _nickname = "User";
+  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nickname = prefs.getString('user_nickname') ?? "User";
+    });
+  }
+
+  void _onNavTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SizedBox.expand(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Text("👋 ", style: TextStyle(fontSize: 24)),
+                        Text(
+                          "Welcome, $_nickname!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    const Row(
+                      children: [
+                        Expanded(
+                          child: BalanceCard(
+                            title: "Total Income",
+                            amount: "₹90,000",
+                            isIncome: true,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: BalanceCard(
+                            title: "Total Expense",
+                            amount: "₹36,345",
+                            isIncome: false,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const MonthlyLimitCard(
+                      title: "Monthly Limit",
+                      currentAmount: 7324,
+                      limitAmount: 10000,
+                    ),
+                    const SizedBox(height: 24),
+                    // Recent Transactions would go here.
+                    const Expanded(
+                      child: Center(
+                        child: Text(
+                          "Recent Transactions (Placeholder)",
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Add Transaction Button
+            Positioned(
+              right: 24,
+              bottom: 112,
+              child: GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: const AddTransactionBottomSheet(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF20DE39), Color(0xFF147721)],
+                    ),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 28),
+                ),
+              ),
+            ),
+
+            // Custom Floating Bottom Navigation Bar
+            Positioned(
+              bottom: 32,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: CustomNavBar(
+                  selectedIndex: _selectedIndex,
+                  onItemTapped: _onNavTapped,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

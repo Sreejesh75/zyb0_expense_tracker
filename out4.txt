@@ -1,0 +1,36 @@
+﻿Running Gradle task 'assembleDebug'...                          
+flutter : Target dart_build failed: Error: 
+Android NDK Clang could not be found.
+At line:1 char:1
++ flutter build apk --debug 2>&1 | Out-File 
+-Encoding utf8 out4.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   Target dart_bui...d not be found.:String)  
+   [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task 
+':app:compileFlutterBuildDebug'.
+> Process 'command 
+'C:\src\flutter\bin\flutter.bat'' finished 
+with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the 
+stack trace.
+> Run with --info or --debug option to get 
+more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4s
+Running Gradle task 'assembleDebug'...                              4.2s
+Gradle task assembleDebug failed with exit 
+code 1

@@ -1,0 +1,53 @@
+﻿Running Gradle task 'assembleDebug'...                          
+flutter : Your project is configured with 
+Android NDK 26.3.11579264, but the following 
+plugin(s) depend on a different Android NDK 
+version:
+At line:1 char:1
++ flutter build apk --debug 2>&1 | Out-File 
+-Encoding utf8 out3.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   Your project is...id NDK version::String)  
+   [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 
+- path_provider_android requires Android NDK 
+27.0.12077973
+- shared_preferences_android requires Android 
+NDK 27.0.12077973
+Fix this issue by using the highest Android 
+NDK version (they are backward compatible).
+Add the following to C:\Flutter Projects\zybo_
+expense_tracker\android\app\build.gradle.kts:
+
+    android {
+        ndkVersion = "27.0.12077973"
+        ...
+    }
+Target dart_build failed: Error: Android NDK 
+Clang could not be found.
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task 
+':app:compileFlutterBuildDebug'.
+> Process 'command 
+'C:\src\flutter\bin\flutter.bat'' finished 
+with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the 
+stack trace.
+> Run with --info or --debug option to get 
+more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4s
+Running Gradle task 'assembleDebug'...                              4.4s
+Gradle task assembleDebug failed with exit 
+code 1

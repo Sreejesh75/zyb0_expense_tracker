@@ -6,6 +6,7 @@ import 'package:zybo_expense_tracker/core/theme/app_text_styles.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../home/screens/home_screen.dart';
 
 class NameEntryScreen extends StatefulWidget {
   final String phone;
@@ -40,7 +41,10 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
         listener: (context, state) {
           if (state is AuthSuccess) {
             // Navigate to Home
-            print("To Home!");
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (route) => false,
+            );
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
@@ -61,21 +65,18 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
                 children: [
                   const SizedBox(height: 64),
 
-                  // Title
                   Text(
                     '👋 What should we call you?',
                     style: AppTextStyles.loginTitle,
                   ),
                   const SizedBox(height: 12),
 
-                  // Subtitle
                   Text(
                     'This name stays only on your device.',
                     style: AppTextStyles.description,
                   ),
                   const SizedBox(height: 48),
 
-                  // Name Input Container
                   Container(
                     width: double.infinity,
                     height: 56,
@@ -105,8 +106,7 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
                         if (_isValid)
                           const Icon(
                             Icons.check_circle_outline,
-                            color: Colors
-                                .green, // Visual indicator shown in screenshots
+                            color: Colors.green,
                             size: 20,
                           ),
                       ],
@@ -114,7 +114,6 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Continue Button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -128,7 +127,7 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
                                 ),
                               );
                             }
-                          : null, // disables button natively
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isValid
                             ? AppColors.primary

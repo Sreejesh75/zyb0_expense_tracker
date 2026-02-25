@@ -8,6 +8,7 @@ import 'package:zybo_expense_tracker/features/auth/bloc/auth_bloc.dart';
 import 'package:zybo_expense_tracker/features/auth/bloc/auth_event.dart';
 import 'package:zybo_expense_tracker/features/auth/bloc/auth_state.dart';
 import 'package:zybo_expense_tracker/features/auth/screens/name_entry_screen.dart';
+import 'package:zybo_expense_tracker/features/home/screens/home_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -91,7 +92,10 @@ class _OtpScreenState extends State<OtpScreen> {
         if (state is AuthSuccess) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           // Returning user: API returned token, proceed to Home
-          debugPrint("User logged in! Navigating to Home...");
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (route) => false,
+          );
         } else if (state is OtpVerifiedNeedsAccount) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           // New user: Needs nickname
