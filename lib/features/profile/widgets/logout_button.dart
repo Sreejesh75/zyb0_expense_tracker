@@ -19,7 +19,9 @@ class LogoutButton extends StatelessWidget {
           ), // Dark bg, this matches Figma mock visual look
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFFF2929), // Added subtle red outline to match
+            color: Colors.white.withValues(
+              alpha: 0.1,
+            ), // Matched border with Cloud Sync section
             width: 1,
           ),
         ),

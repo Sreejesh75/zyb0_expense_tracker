@@ -24,9 +24,6 @@ class TransactionCard extends StatelessWidget {
         ? const Color(0xFF34FF4F)
         : const Color(0xFFFF3437);
 
-    // Custom date logic based on requested UI (12th Dec 2026)
-    // Note: 'do' isn't fully supported consistently in all locales for intl,
-    // a safer fallback is 'd MMM yyyy' but let's implement the suffix manually for perfection:
     final day = transaction.timestamp.day;
     final suffix = (day >= 11 && day <= 13)
         ? 'th'
@@ -37,10 +34,10 @@ class TransactionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 343),
-      // Removed fixed height to prevent overflow
+    
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Match dark background pattern
+        color: const Color(0xFF1E1E1E), 
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1),
@@ -60,7 +57,13 @@ class TransactionCard extends StatelessWidget {
             ),
             child: Icon(
               _getCategoryIcon(
-                transaction.categoryName ?? transaction.category_id,
+                (transaction.categoryName ?? transaction.category_id)
+                            .isNotEmpty &&
+                        (transaction.categoryName ?? transaction.category_id)
+                                .toLowerCase() !=
+                            'null'
+                    ? (transaction.categoryName ?? transaction.category_id)
+                    : 'Uncategorized',
               ),
               color: Colors.white,
               size: 16,
@@ -79,7 +82,7 @@ class TransactionCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600, // Semi Bold
+                    fontWeight: FontWeight.w600, 
                     fontSize: 16,
                     height: 1.5,
                     letterSpacing: -0.05 * 16,
@@ -87,11 +90,17 @@ class TransactionCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  transaction.categoryName ?? transaction.category_id,
+                  (transaction.categoryName ?? transaction.category_id)
+                              .isNotEmpty &&
+                          (transaction.categoryName ?? transaction.category_id)
+                                  .toLowerCase() !=
+                              'null'
+                      ? (transaction.categoryName ?? transaction.category_id)
+                      : 'Uncategorized',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w400, // Regular
+                    fontWeight: FontWeight.w400, 
                     fontSize: 14,
                     height: 1.5,
                     letterSpacing: -0.05 * 14,
@@ -102,7 +111,6 @@ class TransactionCard extends StatelessWidget {
             ),
           ),
 
-          // Metrics & Delete
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,7 +122,7 @@ class TransactionCard extends StatelessWidget {
                   Text(
                     formattedDate,
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w400, // Regular
+                      fontWeight: FontWeight.w400, 
                       fontSize: 13,
                       height: 1.5,
                       letterSpacing: -0.05 * 13,
@@ -125,9 +133,9 @@ class TransactionCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onDelete,
                     child: const Icon(
-                      Icons.delete, // Basic material or Phosphor
+                      Icons.delete, 
                       color: Color(0xFFFF3437),
-                      size: 16,
+                      size: 22,
                     ),
                   ),
                 ],
@@ -136,8 +144,8 @@ class TransactionCard extends StatelessWidget {
               Text(
                 amountText,
                 style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w500, // Medium
-                  fontSize: 22, // Set to 22 per specs
+                  fontWeight: FontWeight.w500, 
+                  fontSize: 22,
                   height: 1.5,
                   letterSpacing: -0.05 * 22,
                   color: amountColor,

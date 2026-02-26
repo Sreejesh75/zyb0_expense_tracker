@@ -65,9 +65,20 @@ class CategoryDatabase {
       where: 'is_deleted = 0',
     );
 
-    return List.generate(maps.length, (i) {
-      return CategoryModel.fromDbMap(maps[i]);
-    });
+    // Deduplicate by name to prevent confusing UI issues from API syncing duplicates
+    final uniqueNames = <String>{};
+    final List<CategoryModel> categories = [];
+
+    for (var map in maps) {
+      final cat = CategoryModel.fromDbMap(map);
+      final normalizedName = cat.name.toLowerCase().trim();
+      if (!uniqueNames.contains(normalizedName)) {
+        uniqueNames.add(normalizedName);
+        categories.add(cat);
+      }
+    }
+
+    return categories;
   }
 
   Future<List<String>> getDeletedCategoryIds() async {

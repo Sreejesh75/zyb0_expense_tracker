@@ -10,6 +10,10 @@ import 'package:zybo_expense_tracker/features/auth/bloc/auth_event.dart';
 import 'package:zybo_expense_tracker/features/auth/bloc/auth_state.dart';
 import 'package:zybo_expense_tracker/features/auth/screens/name_entry_screen.dart';
 import 'package:zybo_expense_tracker/features/home/screens/home_screen.dart';
+import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
+import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart';
+import 'package:zybo_expense_tracker/features/categories/bloc/category_event.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -92,6 +96,11 @@ class _OtpScreenState extends State<OtpScreen> {
       listener: (context, state) {
         if (state is AuthSuccess) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          // Trigger a fresh load of transactions and categories specifically using the new Token!
+          context.read<TransactionBloc>().add(LoadTransactionsEvent());
+          context.read<CategoryBloc>().add(LoadCategoriesEvent());
+
           // Returning user: API returned token, proceed to Home
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeScreen()),

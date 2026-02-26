@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 class CategoryModel {
   final String id;
   final String name;
@@ -13,7 +15,8 @@ class CategoryModel {
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      id: json['id'],
+      // Zybo API uses 'category_id' instead of 'id' in its responses
+      id: json['category_id'] ?? json['id'] ?? const Uuid().v4(),
       name: json['name'],
       is_synced: 1, // Considered synced if arriving from remote
       is_deleted: json['is_deleted'] ?? 0,
@@ -39,7 +42,7 @@ class CategoryModel {
   }
 
   Map<String, dynamic> toApiJson() {
-    return {'id': id, 'name': name};
+    return {'category_id': id, 'name': name};
   }
 
   CategoryModel copyWith({

@@ -7,6 +7,10 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../../home/screens/home_screen.dart';
+import '../../transactions/bloc/transaction_bloc.dart';
+import '../../transactions/bloc/transaction_event.dart';
+import '../../categories/bloc/category_bloc.dart';
+import '../../categories/bloc/category_event.dart';
 
 class NameEntryScreen extends StatefulWidget {
   final String phone;
@@ -40,6 +44,10 @@ class _NameEntryScreenState extends State<NameEntryScreen> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
+            // Trigger a fresh load of transactions and categories for new user
+            context.read<TransactionBloc>().add(LoadTransactionsEvent());
+            context.read<CategoryBloc>().add(LoadCategoriesEvent());
+
             // Navigate to Home
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomeScreen()),

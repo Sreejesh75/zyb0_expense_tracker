@@ -11,6 +11,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SendOtpEvent>(_onSendOtp);
     on<ValidateOtpEvent>(_onValidateOtp);
     on<CreateAccountEvent>(_onCreateAccount);
+    on<LogoutEvent>(_onLogout);
   }
 
   Future<void> _onSendOtp(SendOtpEvent event, Emitter<AuthState> emit) async {
@@ -59,20 +60,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           );
           emit(AuthSuccess(tokenToSave));
         } else {
-          // Check if local token/nickname exists (SQLite/SharedPrefs) before asking for nickname
-          final localProfile = await authService.getLocalUserProfile();
-          if (localProfile != null) {
-            final tokenToSave = localProfile['token'].toString();
-            final nicknameToSave = localProfile['nickname'].toString();
-            await authService.saveAuthData(
-              tokenToSave,
-              nicknameToSave,
-            ); // Ensure pref is synced if SQLite was used
-            emit(AuthSuccess(tokenToSave));
-          } else {
-            // New user: Requires nickname and create account
-            emit(OtpVerifiedNeedsAccount(event.phone));
-          }
+          // New user (from API): user_exists = false.
+          // We MUST ALWAYS force them to the Name Entry Screen because the API doesn't know them!
+          // We cannot rely on localSQLite here because it might contain a previous user's data.
+          emit(OtpVerifiedNeedsAccount(event.phone));
         }
       } else {
         emit(const AuthError("Invalid OTP entered"));
@@ -105,5 +96,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       emit(AuthError(e.toString()));
     }
+  }
+
+  Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
+    await authService.logout();
+    emit(AuthInitial());
   }
 }

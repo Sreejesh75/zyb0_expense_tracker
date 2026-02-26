@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:zybo_expense_tracker/core/constants/api_constants.dart';
 import 'package:zybo_expense_tracker/features/auth/services/auth_service.dart';
 import 'package:zybo_expense_tracker/features/transactions/models/transaction_model.dart';
+import 'package:zybo_expense_tracker/features/transactions/services/transaction_database.dart';
 
 class TransactionService {
   final Dio _dio;
@@ -12,8 +13,8 @@ class TransactionService {
     : _dio = Dio(
         BaseOptions(
           baseUrl: ApiConstants.baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ),
       ) {
@@ -54,29 +55,51 @@ class TransactionService {
     if (transactions.isEmpty) return [];
 
     List<String> syncedIds = [];
-    for (var tx in transactions) {
-      try {
-        final payload = tx.toApiJson();
+    try {
+      final payload = {
+        'transactions': transactions.map((tx) => tx.toApiJson()).toList(),
+      };
 
-        final response = await _dio.post(
-          ApiConstants.addTransactions,
-          data: payload,
-        );
+      final response = await _dio.post(
+        ApiConstants.addTransactions,
+        data: payload,
+      );
 
-        final data = response.data is String
-            ? jsonDecode(response.data)
-            : response.data;
+      final data = response.data is String
+          ? jsonDecode(response.data)
+          : response.data;
 
-        // Assuming either it indicates success or echoes back the ID
-        if (data['status'] == 'success') {
-          syncedIds.add(tx.id);
-        } else if (data['synced_ids'] != null &&
-            data['synced_ids'].contains(tx.id)) {
-          syncedIds.add(tx.id);
+      if (data['status'] == 'success') {
+        final List<dynamic>? returnedTxs = data['transactions'];
+
+        // We MUST map the backend-generated new IDs back onto our old local IDs!
+        // The backend processes the array sequentially, so returnedTxs[i] corresponds to transactions[i].
+        if (returnedTxs != null && returnedTxs.length == transactions.length) {
+          final txDb = TransactionDatabase();
+          for (int i = 0; i < transactions.length; i++) {
+            final oldId = transactions[i].id;
+            final newId = returnedTxs[i]['id'] ?? oldId;
+            // The backend unfortunately swallows the category_id sometimes, so we preserve our local one if null
+            final newCategoryId =
+                returnedTxs[i]['category_id']?.toString() ??
+                transactions[i].category_id;
+
+            // Re-write the SQLite record to match the cloud identity, so future deletes actually work on the cloud!
+            try {
+              await txDb.replaceTransactionId(oldId, newId, newCategoryId);
+            } catch (e) {
+              print('Failed to replace zombie ID $oldId -> $newId: $e');
+            }
+          }
         }
-      } catch (e) {
-        print('Error syncing transaction ${tx.id}: $e');
+
+        // We technically replaced them above, but we still return the old ones to satisfy the Bloc's markAsSynced fallback
+        syncedIds.addAll(transactions.map((tx) => tx.id));
+      } else {
+        print("Backend rejected transactions sync: ${data['message']}");
       }
+    } catch (e) {
+      print('Error syncing bulk transactions: $e');
     }
     return syncedIds;
   }

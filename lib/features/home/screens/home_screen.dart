@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:zybo_expense_tracker/features/profile/screens/profile_screen.dart';
 import 'package:zybo_expense_tracker/features/home/widgets/add_transaction_bottom_sheet.dart';
+import 'package:zybo_expense_tracker/features/home/widgets/chatbot_widget.dart';
 import 'package:zybo_expense_tracker/features/transactions/screens/transactions_screen.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_bloc.dart';
 import 'package:zybo_expense_tracker/features/transactions/bloc/transaction_event.dart';
@@ -105,6 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+
+            // Animated Chatbot Widget
+            if (_selectedIndex == 0) // Only show on HomeScreen tab
+              const Positioned(left: 24, bottom: 112, child: ChatbotWidget()),
 
             // Custom Floating Bottom Navigation Bar
             Positioned(

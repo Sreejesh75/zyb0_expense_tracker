@@ -70,4 +70,9 @@ class DatabaseHelper {
     }
     return null;
   }
+
+  Future<void> clearUserProfile() async {
+    final db = await instance.database;
+    await db.delete('user_profile');
+  }
 }

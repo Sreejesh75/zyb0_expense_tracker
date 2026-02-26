@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           : () {
                               if (_phoneController.text.isNotEmpty) {
                                 context.read<AuthBloc>().add(
-                                  SendOtpEvent('+91${_phoneController.text}'),
+                                  SendOtpEvent(_phoneController.text),
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(

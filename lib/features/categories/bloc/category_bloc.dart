@@ -17,6 +17,15 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     on<AddCategoryEvent>(_onAddCategory);
     on<DeleteCategoryEvent>(_onDeleteCategory);
     on<SyncCategoriesEvent>(_onSyncCategories);
+    on<ClearLocalCategoriesEvent>(_onClearLocalCategories);
+  }
+
+  Future<void> _onClearLocalCategories(
+    ClearLocalCategoriesEvent event,
+    Emitter<CategoryState> emit,
+  ) async {
+    await localDb.clearAll();
+    emit(CategoryInitial());
   }
 
   Future<void> _onLoadCategories(
@@ -30,11 +39,30 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
 
       bool isEmpty = await localDb.isTableEmpty();
       if (isEmpty) {
-        final defaults = ['Grocery', 'Electricity', 'Water'];
-        for (var name in defaults) {
-          final cat = CategoryModel(id: _uuid.v4(), name: name, is_synced: 0);
-          await localDb.insertCategory(cat);
-          localData.add(cat);
+        bool hasRemote = false;
+        try {
+          final remoteData = await apiService.getCategories();
+          if (remoteData.isNotEmpty) {
+            hasRemote = true;
+            for (var c in remoteData) {
+              await localDb.insertCategory(
+                c.copyWith(is_synced: 1, is_deleted: 0),
+              );
+            }
+            localData = await localDb.getAllCategories();
+          }
+        } catch (e) {
+          print("Failed to auto-fetch remote categories: $e");
+        }
+
+        // Only insert defaults if we couldn't fetch from remote
+        if (!hasRemote) {
+          final defaults = ['Grocery', 'Electricity', 'Water'];
+          for (var name in defaults) {
+            final cat = CategoryModel(id: _uuid.v4(), name: name, is_synced: 0);
+            await localDb.insertCategory(cat);
+            localData.add(cat);
+          }
         }
       }
 
@@ -64,16 +92,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       } else {
         emit(CategoryLoaded([newCategory]));
       }
-
-      // Sync immediately if possible
-      try {
-        final syncedIds = await apiService.syncCategories([newCategory]);
-        if (syncedIds.isNotEmpty) {
-          await localDb.markAsSynced(syncedIds);
-        }
-      } catch (_) {
-        // Leave unsynced locally
-      }
     } catch (e) {
       emit(CategoryError("Failed to add category"));
       add(LoadCategoriesEvent()); // Revert UI
@@ -95,16 +113,6 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
             currentCategories.where((c) => c.id != event.id).toList(),
           ),
         );
-      }
-
-      // Try background sync for deletion
-      try {
-        final deletedIds = await apiService.deleteCategories([event.id]);
-        if (deletedIds.isNotEmpty) {
-          await localDb.hardDeleteCategories(deletedIds);
-        }
-      } catch (_) {
-        // Leave is_deleted=1 locally for next sync attempt
       }
     } catch (e) {
       emit(CategoryError("Failed to delete category"));

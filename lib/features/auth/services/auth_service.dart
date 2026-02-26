@@ -11,8 +11,8 @@ class AuthService {
     : _dio = Dio(
         BaseOptions(
           baseUrl: ApiConstants.baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ),
       );
@@ -99,7 +99,8 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
-    await prefs.remove('user_nickname');
+    // Deliberately keep 'user_nickname' and 'DatabaseHelper' profile data
+    // so the user's modifications survive across logins.
   }
 
   String _handleDioError(DioException e) {
@@ -109,7 +110,7 @@ class AuthService {
       }
       return e.response?.statusMessage ?? 'Server error occurred';
     } else {
-      return 'Network error or timeout';
+      return 'Network error or timeout. Check internet connection.';
     }
   }
 }

@@ -12,8 +12,8 @@ class CategoryService {
     : _dio = Dio(
         BaseOptions(
           baseUrl: ApiConstants.baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ),
       ) {
@@ -71,6 +71,22 @@ class CategoryService {
             data['synced_ids'].contains(cat.id)) {
           syncedIds.add(cat.id);
         }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 400) {
+          final data = e.response?.data;
+          String msg = '';
+          if (data is Map) {
+            msg = data['message']?.toString().toLowerCase() ?? '';
+          } else if (data is String) {
+            msg = data.toLowerCase();
+          }
+          if (msg.contains('already exists')) {
+            // Backend already has this category, mark it synced locally.
+            syncedIds.add(cat.id);
+            continue;
+          }
+        }
+        print('Error syncing category ${cat.id}: $e');
       } catch (e) {
         print('Error syncing category ${cat.id}: $e');
       }

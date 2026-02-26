@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zybo_expense_tracker/features/auth/bloc/auth_bloc.dart';
+import 'package:zybo_expense_tracker/features/auth/bloc/auth_event.dart';
+import 'package:zybo_expense_tracker/features/onboarding/screens/splash_screen.dart';
+
 import 'package:zybo_expense_tracker/features/profile/widgets/nickname_section.dart';
 import 'package:zybo_expense_tracker/features/profile/widgets/alert_limit_section.dart';
 import 'package:zybo_expense_tracker/features/profile/widgets/categories_section.dart';
@@ -155,8 +160,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // LOG OUT BUTTON
             _pad(
               LogoutButton(
-                onTap: () {
-                  // Handle logout
+                onTap: () async {
+                  // Erase Auth/Session State ONLY.
+                  // We intentionally DO NOT wipe the SQLite Database or SharedPreferences (Limits, Nickname, Sync flags)
+                  // because there is no remote API to save limits/nicknames, and wiping them would permanently delete the user's setup.
+
+                  context.read<AuthBloc>().add(LogoutEvent());
+
+                  if (!context.mounted) return;
+
+                  // 4. Navigate out! Keep it isolated
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const SplashScreen(),
+                    ),
+                    (route) => false,
+                  );
                 },
               ),
             ),

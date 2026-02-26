@@ -198,6 +198,9 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                 hintText: "Title",
                 hintStyle: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 15,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
                 isDense: true,
@@ -211,7 +214,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
             height: 56,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF262626), // Text field bg
+              color: const Color(0xFF262626), 
               borderRadius: BorderRadius.circular(8),
             ),
             child: Stack(
@@ -250,7 +253,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                   style: const TextStyle(color: Colors.white, fontSize: 18),
                   onChanged: (_) => setState(
                     () {},
-                  ), // Need SetState to rebuild stack empty state
+                  ),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -297,7 +300,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                 );
               }
 
-              // Auto-select first if none is selected
+           
               if (selectedCategoryId == null && displayCategories.isNotEmpty) {
                 selectedCategoryId = displayCategories.first.id;
                 selectedCategoryName = displayCategories.first.name;
@@ -334,7 +337,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                             color: isSelected
                                 ? AppColors.primary.withValues(
                                     alpha: 0.15,
-                                  ) // Subtle primary fill
+                                  ) 
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
@@ -367,7 +370,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF18281A), // Subtle dark green tint
+              color: const Color(0xFF18281A), 
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

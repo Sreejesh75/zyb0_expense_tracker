@@ -13,3 +13,5 @@ class DeleteCategoryEvent extends CategoryEvent {
 }
 
 class SyncCategoriesEvent extends CategoryEvent {}
+
+class ClearLocalCategoriesEvent extends CategoryEvent {}

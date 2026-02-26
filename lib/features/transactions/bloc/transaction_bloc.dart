@@ -16,6 +16,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<AddTransactionEvent>(_onAddTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
     on<SyncTransactionsEvent>(_onSyncTransactions);
+    on<ClearLocalDataEvent>(_onClearLocalData);
+  }
+
+  Future<void> _onClearLocalData(
+    ClearLocalDataEvent event,
+    Emitter<TransactionState> emit,
+  ) async {
+    await localDb.clearAll();
+    emit(TransactionInitial());
   }
 
   Future<void> _onLoadTransactions(
@@ -24,9 +33,26 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     emit(TransactionLoading());
     try {
-      // 1. Instantly load and show local data
-      // NO automatic cloud fetch here to prevent data "revival" issues.
-      final localData = await localDb.getAllTransactions();
+      // 1. Instantly load local data
+      var localData = await localDb.getAllTransactions();
+
+      // 2. If completely empty (e.g., fresh login after logout), attempt remote pull
+      if (localData.isEmpty) {
+        try {
+          final remoteData = await apiService.getTransactions();
+          if (remoteData.isNotEmpty) {
+            for (var tx in remoteData) {
+              await localDb.insertTransaction(
+                tx.copyWith(is_synced: 1, is_deleted: 0),
+              );
+            }
+            localData = await localDb.getAllTransactions();
+          }
+        } catch (e) {
+          print("Failed to auto-fetch remote transactions on fresh login: $e");
+        }
+      }
+
       emit(TransactionLoaded(localData));
     } catch (e) {
       emit(TransactionError("Failed to load transactions: $e"));
@@ -77,16 +103,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           );
         }
       }
-
-      // Try syncing immediately
-      try {
-        final syncedIds = await apiService.syncTransactions([transaction]);
-        if (syncedIds.isNotEmpty) {
-          await localDb.markAsSynced(syncedIds);
-        }
-      } catch (_) {
-        // Leave as unsynced locally if offline
-      }
     } catch (e) {
       emit(TransactionError("Failed to save transaction"));
       add(LoadTransactionsEvent()); // Revert
@@ -115,16 +131,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         } else {
           emit(TransactionSyncing(updatedTransactions));
         }
-      }
-
-      // Try background sync for deletion
-      try {
-        final confirmedIds = await apiService.deleteTransactions([event.id]);
-        if (confirmedIds.isNotEmpty) {
-          await localDb.hardDeleteTransactions(confirmedIds);
-        }
-      } catch (_) {
-        // Fail silently, will be handled by main sync workflow
       }
     } catch (e) {
       emit(TransactionError("Failed to delete transaction"));

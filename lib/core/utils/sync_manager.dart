@@ -49,7 +49,8 @@ class SyncManager {
       print("🌐 GLOBAL SYNC: Step B - Uploading New Data.");
 
       // 1. Categories First (Transactions need them)
-      final unsyncedCats = await catDb.getUnsyncedActiveCategories();
+      // Force uploading ALL categories to fix broken backend mappings from previous builds
+      final unsyncedCats = await catDb.getAllCategories();
       if (unsyncedCats.isNotEmpty) {
         print("🌐 SYNC: Uploading ${unsyncedCats.length} Categories...");
         final confirmed = await catApi.syncCategories(unsyncedCats);

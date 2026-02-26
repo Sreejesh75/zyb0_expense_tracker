@@ -55,6 +55,20 @@ class TransactionDatabase {
     );
   }
 
+  Future<void> replaceTransactionId(
+    String oldId,
+    String newId,
+    String newCategoryId,
+  ) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.update(
+      tableName,
+      {'id': newId, 'category_id': newCategoryId, 'is_synced': 1},
+      where: 'id = ?',
+      whereArgs: [oldId],
+    );
+  }
+
   Future<List<TransactionModel>> getUnsyncedTransactions() async {
     final db = await DatabaseHelper.instance.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -96,7 +110,7 @@ class TransactionDatabase {
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
       SELECT t.*, c.name as categoryName
       FROM $tableName t
-      LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN categories c ON t.category_id = c.id OR LOWER(t.category_id) = LOWER(c.name)
       WHERE t.is_deleted = 0
       ORDER BY t.timestamp DESC
     ''');
@@ -111,5 +125,10 @@ class TransactionDatabase {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<void> clearAll() async {
+    final db = await DatabaseHelper.instance.database;
+    await db.delete(tableName);
   }
 }

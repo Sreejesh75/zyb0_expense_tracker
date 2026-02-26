@@ -27,3 +27,5 @@ class DeleteTransactionEvent extends TransactionEvent {
 }
 
 class SyncTransactionsEvent extends TransactionEvent {}
+
+class ClearLocalDataEvent extends TransactionEvent {}

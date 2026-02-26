@@ -58,7 +58,7 @@ class TransactionModel extends Equatable {
 
   Map<String, dynamic> toApiJson() {
     return {
-      'id': id,
+      'transaction_id': id,
       'amount': amount,
       'note': note,
       'type': type,
