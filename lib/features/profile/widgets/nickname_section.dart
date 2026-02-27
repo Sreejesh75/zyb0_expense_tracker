@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:zybo_expense_tracker/core/theme/app_colors.dart';
 import 'package:zybo_expense_tracker/features/profile/widgets/profile_section_label.dart';
+import 'package:zybo_expense_tracker/features/profile/widgets/edit_nickname_dialog.dart';
 
 class NicknameSection extends StatelessWidget {
   final String nickname;
@@ -15,52 +15,12 @@ class NicknameSection extends StatelessWidget {
   });
 
   void _showEditDialog(BuildContext context) {
-    final TextEditingController controller = TextEditingController(
-      text: nickname,
-    );
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1C1C1E),
-          title: const Text(
-            'Edit Nickname',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: controller,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Enter new nickname',
-              hintStyle: const TextStyle(color: Colors.white54),
-              enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white24),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.primary),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white54),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  onNicknameChanged(controller.text.trim());
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Save', style: TextStyle(color: AppColors.primary)),
-            ),
-          ],
-        );
-      },
+      builder: (context) => EditNicknameDialog(
+        currentNickname: nickname,
+        onSave: onNicknameChanged,
+      ),
     );
   }
 

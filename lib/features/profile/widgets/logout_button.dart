@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:zybo_expense_tracker/features/profile/widgets/logout_confirm_dialog.dart';
 
 class LogoutButton extends StatelessWidget {
   final VoidCallback onTap;
@@ -10,7 +11,12 @@ class LogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => LogoutConfirmDialog(onConfirm: onTap),
+        );
+      },
       child: Container(
         height: 56,
         decoration: BoxDecoration(
