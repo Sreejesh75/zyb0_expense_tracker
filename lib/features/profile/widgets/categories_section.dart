@@ -176,6 +176,20 @@ class CategoriesSection extends StatelessWidget {
                             );
                             categoryController.clear();
                             FocusScope.of(context).unfocus();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Category '$text' added"),
+                                backgroundColor: const Color(0xFF312ECB),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Category name cannot be empty"),
+                                backgroundColor: Colors.orangeAccent,
+                              ),
+                            );
                           }
                         },
                         child: const Center(

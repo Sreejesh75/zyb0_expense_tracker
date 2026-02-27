@@ -32,11 +32,21 @@ class _OtpScreenState extends State<OtpScreen> {
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
   int _start = 30;
+  String? _lastSentOtp;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
+
+    // Show OTP hint immediately on entry if state is already OtpSentState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<AuthBloc>().state;
+      if (state is OtpSentState) {
+        _lastSentOtp = state.expectedOtp;
+        _showOtpSentSnackBar(state.expectedOtp);
+      }
+    });
   }
 
   void _startTimer() {
@@ -65,6 +75,23 @@ class _OtpScreenState extends State<OtpScreen> {
     }
     _timer?.cancel();
     super.dispose();
+  }
+
+  void _showOtpSentSnackBar(String otp) {
+    if (!mounted || _start <= 0) return;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'OTP sent successfully: $otp',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 30),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _onOtpChanged(String value, int index) {
@@ -124,18 +151,9 @@ class _OtpScreenState extends State<OtpScreen> {
             context,
           ).showSnackBar(SnackBar(content: Text(state.message)));
         } else if (state is OtpSentState) {
+          _lastSentOtp = state.expectedOtp;
           _startTimer();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'OTP sent successfully: ${state.expectedOtp}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 30),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          _showOtpSentSnackBar(state.expectedOtp);
         }
       },
       builder: (context, state) {
@@ -254,11 +272,32 @@ class _OtpScreenState extends State<OtpScreen> {
                             ValidateOtpEvent(widget.phoneNumber, otp),
                           );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter 6 digits'),
-                            ),
-                          );
+                          // Clear any existing snackbar (like the green one) to show this immediately
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please enter 6 digit OTP',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.redAccent,
+                                  duration: Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              )
+                              .closed
+                              .then((reason) {
+                                // If the reason is not manual 'hide' or 'replace', then re-show.
+                                // SnackBarClosedReason.remove is what usually happens when we hide it.
+                                if (reason != SnackBarClosedReason.remove &&
+                                    _lastSentOtp != null &&
+                                    _start > 0 &&
+                                    mounted) {
+                                  _showOtpSentSnackBar(_lastSentOtp!);
+                                }
+                              });
                         }
                       },
                       style: ElevatedButton.styleFrom(

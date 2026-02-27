@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 30),
+              duration: const Duration(seconds: 4),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -142,15 +142,37 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: isLoading
                           ? null
                           : () {
-                              if (_phoneController.text.isNotEmpty) {
-                                context.read<AuthBloc>().add(
-                                  SendOtpEvent(_phoneController.text),
-                                );
-                              } else {
+                              final phone = _phoneController.text.trim();
+                              if (phone.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text("Enter phone number"),
+                                    content: Text(
+                                      "Please enter your phone number",
+                                    ),
+                                    backgroundColor: Colors.redAccent,
                                   ),
+                                );
+                              } else if (phone.length < 10) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Phone number must be at least 10 digits",
+                                    ),
+                                    backgroundColor: Colors.orangeAccent,
+                                  ),
+                                );
+                              } else if (phone.length > 10) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Phone number cannot exceed 10 digits",
+                                    ),
+                                    backgroundColor: Colors.orangeAccent,
+                                  ),
+                                );
+                              } else {
+                                context.read<AuthBloc>().add(
+                                  SendOtpEvent(phone),
                                 );
                               }
                             },

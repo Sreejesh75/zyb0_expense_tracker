@@ -59,7 +59,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _setLimit() async {
     final prefs = await SharedPreferences.getInstance();
-    final amountText = _amountController.text;
+    final amountText = _amountController.text.trim();
+
+    if (amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a limit amount"),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
+
     final parsedAmount = double.tryParse(amountText);
 
     if (parsedAmount != null && parsedAmount > 0) {
@@ -72,6 +83,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       _amountController.clear();
       FocusScope.of(context).unfocus(); // Close keyboard
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Alert limit updated to ₹$parsedAmount"),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a valid amount greater than 0"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
