@@ -9,6 +9,8 @@ import 'package:zybo_expense_tracker/features/transactions/models/transaction_mo
 import 'package:zybo_expense_tracker/features/categories/bloc/category_bloc.dart';
 import 'package:zybo_expense_tracker/features/categories/bloc/category_state.dart';
 
+import 'package:zybo_expense_tracker/core/widgets/validation_dialog.dart';
+
 class AddTransactionBottomSheet extends StatefulWidget {
   const AddTransactionBottomSheet({super.key});
 
@@ -35,25 +37,55 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
     final title = _titleController.text.trim();
     final amountText = _amountController.text.trim();
 
-    if (title.isEmpty || amountText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter title and amount')),
+    if (title.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => const ValidationDialog(
+          title: "Title Required",
+          message: "Please enter a title for your transaction.",
+        ),
+      );
+      return;
+    }
+
+    if (amountText.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => const ValidationDialog(
+          title: "Amount Required",
+          message: "Please enter the transaction amount.",
+          icon: Icons.payments_rounded,
+          iconColor: Colors.blueAccent,
+        ),
       );
       return;
     }
 
     final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
+      showDialog(
+        context: context,
+        builder: (context) => const ValidationDialog(
+          title: "Invalid Amount",
+          message: "Please enter a valid positive number for the amount.",
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.redAccent,
+        ),
       );
       return;
     }
 
     if (selectedCategoryId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      showDialog(
+        context: context,
+        builder: (context) => const ValidationDialog(
+          title: "No Category",
+          message:
+              "You must select a category. If none exist, please add one in your Profile settings first.",
+          icon: Icons.category_rounded,
+          iconColor: Colors.orangeAccent,
+        ),
+      );
       return;
     }
 
@@ -214,7 +246,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
             height: 56,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF262626), 
+              color: const Color(0xFF262626),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Stack(
@@ -251,9 +283,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                   controller: _amountController,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
-                  onChanged: (_) => setState(
-                    () {},
-                  ),
+                  onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
@@ -300,7 +330,6 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                 );
               }
 
-           
               if (selectedCategoryId == null && displayCategories.isNotEmpty) {
                 selectedCategoryId = displayCategories.first.id;
                 selectedCategoryName = displayCategories.first.name;
@@ -335,9 +364,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primary.withValues(
-                                    alpha: 0.15,
-                                  ) 
+                                ? AppColors.primary.withValues(alpha: 0.15)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
@@ -370,7 +397,7 @@ class _AddTransactionBottomSheetState extends State<AddTransactionBottomSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF18281A), 
+              color: const Color(0xFF18281A),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
