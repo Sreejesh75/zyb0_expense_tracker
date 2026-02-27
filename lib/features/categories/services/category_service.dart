@@ -102,31 +102,26 @@ class CategoryService {
       try {
         final response = await _dio.delete(
           ApiConstants.deleteCategories,
-          data: {
-            'ids': [id],
-            'category_id': id,
-          },
+          data: {'id': id, 'category_id': id},
         );
 
-        final data = response.data is String
-            ? jsonDecode(response.data)
-            : response.data;
+        final data = response.data;
 
-        // Check both 'success' status or if the ID is just returned in a list
-        if (data['status'] == 'success') {
-          deletedIds.add(id);
-        } else if (data['deleted_ids'] != null &&
-            data['deleted_ids'].contains(id)) {
+        // Very broad success check for multiple backend versions
+        if (data != null &&
+            (data['status'] == 'success' ||
+                data['message']?.toString().toLowerCase().contains('success') ==
+                    true ||
+                (data['deleted_ids'] != null &&
+                    data['deleted_ids'].contains(id)))) {
           deletedIds.add(id);
         }
       } on DioException catch (e) {
-        if (e.response?.statusCode == 404) {
-          // If it's already 404 Not Found on the server, it is successfully deleted.
+        if (e.response?.statusCode == 404 || e.response?.statusCode == 200) {
+          // If 404, it's already gone. If 200 but logic above missed it, we consider it a success.
           deletedIds.add(id);
         } else {
-          print(
-            'Error deleting category $id: ${e.response?.statusCode} - ${e.response?.data}',
-          );
+          print('Error deleting category $id: ${e.response?.statusCode}');
         }
       } catch (e) {
         print('Error deleting category $id: $e');

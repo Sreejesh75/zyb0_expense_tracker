@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zybo_expense_tracker/features/categories/models/category_model.dart';
 import 'package:zybo_expense_tracker/features/categories/services/category_database.dart';
@@ -37,8 +38,12 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       // 1. Instantly load local data
       List<CategoryModel> localData = await localDb.getAllCategories();
 
-      bool isEmpty = await localDb.isTableEmpty();
-      if (isEmpty) {
+      // Use SharedPreferences to track if we've already done the initial cloud fetch
+      final prefs = await SharedPreferences.getInstance();
+      final hasDoneInitialFetch =
+          prefs.getBool('has_done_initial_category_fetch') ?? false;
+
+      if (localData.isEmpty && !hasDoneInitialFetch) {
         bool hasRemote = false;
         try {
           final remoteData = await apiService.getCategories();
@@ -55,8 +60,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
           print("Failed to auto-fetch remote categories: $e");
         }
 
-        // Only insert defaults if we couldn't fetch from remote
-        if (!hasRemote) {
+        // Only insert defaults if we couldn't fetch from remote AND we have nothing
+        if (!hasRemote && localData.isEmpty) {
           final defaults = ['Grocery', 'Electricity', 'Water'];
           for (var name in defaults) {
             final cat = CategoryModel(id: _uuid.v4(), name: name, is_synced: 0);
@@ -64,6 +69,9 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
             localData.add(cat);
           }
         }
+
+        // Mark as done so we don't keep pulling deleted items back
+        await prefs.setBool('has_done_initial_category_fetch', true);
       }
 
       emit(CategoryLoaded(localData));

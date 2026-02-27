@@ -220,8 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Expanded(
                           child: BalanceCard(
-                            title:
-                                "Total Balance", // Updated title to better reflect its meaning
+                            title: "Total Income",
                             amount: formattedIncome,
                             isIncome: true,
                           ),
@@ -239,8 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     MonthlyLimitCard(
                       title: "Monthly Limit",
-                      currentAmount:
-                          totalExpense, // Tracks expenses as requested
+                      currentAmount: totalExpense,
                       limitAmount: _alertLimit,
                       hasTransactions: hasTransactions,
                     ),
@@ -249,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 24),
-            // Recent Transactions List with dynamic header
+            
             Expanded(
               child: BlocBuilder<TransactionBloc, TransactionState>(
                 builder: (context, state) {
